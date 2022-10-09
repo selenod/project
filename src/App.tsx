@@ -91,7 +91,6 @@ export default function App() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    document.title = 'asdf';
 
     if (projectID === undefined) {
       window.location.replace(landingURL);
@@ -101,6 +100,8 @@ export default function App() {
     api
       .get(`/project/${projectID}`)
       .then((res) => {
+        document.title = res.data.project.name;
+
         setCurrentWindow(
           res.data.project.windowList.find(
             (window: any) =>
@@ -111,6 +112,7 @@ export default function App() {
                 )._id)
           ).id
         );
+
         setData(res.data.project);
       })
       .catch(() => {

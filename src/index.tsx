@@ -11,6 +11,7 @@ root.render(
     <Routes>
       <Route path="/:projectID" element={<App />} />
       <Route path="/:projectID/:pageID" element={<App />} />
+      <Route path="*" element={<App />} />
     </Routes>
   </Router>
 );

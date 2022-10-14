@@ -2,6 +2,11 @@ import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { landingURL } from './config/config';
 import api from './config/api';
+import Runtime from '@ieum-lang/ieum-runtime';
+import DefaultTypes from '@ieum-lang/ieum/dist/data/type/DefaultTypes';
+import { nodeAction, nodeData } from './data/data';
+import { defaultNodes } from '@ieum-lang/ieum';
+import { defaultNodesAction } from '@ieum-lang/ieum-runtime';
 
 export default function App() {
   enum Part {
@@ -119,6 +124,21 @@ export default function App() {
         window.location.replace(landingURL);
       });
   }, [pageID, projectID]);
+
+  useEffect(() => {
+    if (currentWindow !== null && data) {
+      const runtime = new Runtime(
+        DefaultTypes,
+        nodeData,
+        nodeAction,
+        data?.windowList.find(
+          (window: any) => window.id === currentWindow
+        )?.scriptData.data
+      );
+
+      runtime.callEvent('selenod.event.onLoad');
+    }
+  }, [currentWindow, data]);
 
   return (
     <div

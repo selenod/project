@@ -6,7 +6,7 @@ const eventNodeData: NodesData = {
     name: 'On Load',
     inputs: [
       {
-        name: 'do',
+        name: 'excute',
         type: {
           type: 'func',
         },
@@ -16,8 +16,8 @@ const eventNodeData: NodesData = {
   },
 };
 
-const consoleNodeData: NodesData = {
-  'selenod.console.log': {
+const systemNodeDataData: NodesData = {
+  'selenod.system.log': {
     name: 'Console Log',
     inputs: [
       {
@@ -25,38 +25,132 @@ const consoleNodeData: NodesData = {
         type: {
           type: 'any',
         },
-        defaultValue: '',
       },
     ],
     outputs: [],
   },
 };
 
+const typeNodeData: NodesData = {
+  'selenod.type.string': {
+    name: 'String',
+    inputs: [
+      {
+        name: 'value',
+        type: {
+          type: 'string',
+        },
+      },
+    ],
+    outputs: [
+      {
+        name: 'value',
+        type: {
+          type: 'string',
+        },
+      },
+    ],
+  },
+  'selenod.type.int': {
+    name: 'Int',
+    inputs: [
+      {
+        name: 'value',
+        type: {
+          type: 'int',
+        },
+      },
+    ],
+    outputs: [
+      {
+        name: 'value',
+        type: {
+          type: 'int',
+        },
+      },
+    ],
+  },
+  'selenod.type.float': {
+    name: 'Float',
+    inputs: [
+      {
+        name: 'value',
+        type: {
+          type: 'float',
+        },
+      },
+    ],
+    outputs: [
+      {
+        name: 'value',
+        type: {
+          type: 'float',
+        },
+      },
+    ],
+  },
+  'selenod.type.bool': {
+    name: 'Bool',
+    inputs: [
+      {
+        name: 'value',
+        type: {
+          type: 'bool',
+        },
+      },
+    ],
+    outputs: [
+      {
+        name: 'value',
+        type: {
+          type: 'bool',
+        },
+      },
+    ],
+  },
+};
 export const nodeData: NodesData = {
   ...eventNodeData,
-  ...consoleNodeData,
+  ...systemNodeDataData,
+  ...typeNodeData,
 };
 
 const eventNodeAction: NodesAction = {
   'selenod.event.onLoad': (
-    input: { do: { nodeId: string; pinName: string } },
+    input: { excute: { nodeId: string; pinName: string } },
     runtime
   ) => {
-    runtime.executeNode(input.do.nodeId);
+    runtime.executeNode(input.excute.nodeId);
 
     return {};
   },
 };
 
-const consoleNodeAction: NodesAction = {
-  'selenod.console.log': (input: { message: any }) => {
-    console.log(input.message);
+const systemNodeAction: NodesAction = {
+  'selenod.system.log': (input: { message: any }) => {
+    console.log(input.message.value ?? input.message);
 
     return {};
+  },
+};
+
+const typeNodeAction: NodesAction = {
+  'selenod.type.string': (input: { value: any }) => {
+    return { value: input.value };
+  },
+  'selenod.type.int': (input: { value: any }) => {
+    return { value: input.value };
+  },
+  'selenod.type.float': (input: { value: any }) => {
+    return { value: input.value };
+  },
+  'selenod.type.bool': (input: { value: any }) => {
+    return { value: input.value };
   },
 };
 
 export const nodeAction: NodesAction = {
   ...eventNodeAction,
-  ...consoleNodeAction,
+  ...systemNodeAction,
+  ...typeNodeAction,
 };

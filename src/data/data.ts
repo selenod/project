@@ -70,13 +70,13 @@ const stringNodeData: NodesData = {
     name: 'Concatenate',
     inputs: [
       {
-        name: 'parameter 1',
+        name: 'value1',
         type: {
           type: 'string',
         },
       },
       {
-        name: 'parameter 2',
+        name: 'value2',
         type: {
           type: 'string',
         },
@@ -432,13 +432,13 @@ const typeNodeAction: NodesAction = {
     return { return: input.value.value ?? input.value };
   },
   'selenod.string.concatenate': (input: {
-    'parameter 1': { value: any };
-    'parameter 2': { value: any };
+    value1: { value: any };
+    value2: { value: any };
   }) => {
     return {
       return:
-        (input['parameter 1'].value ?? input['parameter 1']) +
-        (input['parameter 2'].value ?? input['parameter 2']),
+        (input.value1.value ?? input.value1) +
+        (input.value2.value ?? input.value2),
     };
   },
   'selenod.int.intToFloat': (input: { value: any }) => {

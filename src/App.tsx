@@ -5,8 +5,6 @@ import api from './config/api';
 import Runtime from '@ieum-lang/ieum-runtime';
 import DefaultTypes from '@ieum-lang/ieum/dist/data/type/DefaultTypes';
 import { nodeAction, nodeData } from './data/data';
-import { defaultNodes } from '@ieum-lang/ieum';
-import { defaultNodesAction } from '@ieum-lang/ieum-runtime';
 
 export default function App() {
   enum Part {
@@ -127,8 +125,25 @@ export default function App() {
 
   useEffect(() => {
     if (currentWindow !== null && data) {
+      const elementNames = data?.windowList
+        .find((window: any) => window.id === currentWindow)
+        ?.elementData.map((data) => data.name);
+
       const runtime = new Runtime(
-        DefaultTypes,
+        [
+          ...DefaultTypes,
+          {
+            name: 'enum',
+            elements: [
+              'No Element',
+              ...elementNames!.filter(
+                (data, index) => elementNames?.indexOf(data) === index
+              ),
+            ],
+            initialValue: 'No Element',
+            color: '#ffc53c',
+          },
+        ],
         nodeData,
         nodeAction,
         data?.windowList.find(
@@ -320,6 +335,7 @@ export default function App() {
               return (
                 <div
                   key={element.id}
+                  className="button"
                   style={{
                     position: 'absolute',
                     top: `calc(${
@@ -361,6 +377,7 @@ export default function App() {
                     fontSize: element.fontSize,
                     fontWeight: element.fontWeight,
                     zIndex: element.index,
+                    cursor: 'pointer',
                   }}
                 >
                   <p

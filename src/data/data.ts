@@ -412,7 +412,7 @@ const eventNodeAction: NodesAction = {
       return {};
     }
 
-    console.log(input.target.value ?? input.target);
+    runtime.executeNode(input.execute.nodeId);
 
     return {};
   },

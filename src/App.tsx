@@ -91,6 +91,10 @@ export default function App() {
     route: string;
   }>();
   const [currentWindow, setCurrentWindow] = useState<number>();
+  const [runtime, setRuntime] = useState<Runtime>();
+  const [checked, setChecked] = useState<{
+    [key: string]: boolean;
+  }>({});
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -129,30 +133,33 @@ export default function App() {
         .find((window: any) => window.id === currentWindow)
         ?.elementData.map((data) => data.name);
 
-      const runtime = new Runtime(
-        [
-          ...DefaultTypes,
-          {
-            name: 'enum',
-            elements: [
-              'No Element',
-              ...elementNames!.filter(
-                (data, index) => elementNames?.indexOf(data) === index
-              ),
-            ],
-            initialValue: 'No Element',
-            color: '#ffc53c',
-          },
-        ],
-        nodeData,
-        nodeAction,
-        data?.windowList.find(
-          (window: any) => window.id === currentWindow
-        )?.scriptData.data
+      setRuntime(
+        new Runtime(
+          [
+            ...DefaultTypes,
+            {
+              name: 'enum',
+              elements: [
+                'No Element',
+                ...elementNames!.filter(
+                  (data, index) => elementNames?.indexOf(data) === index
+                ),
+              ],
+              initialValue: 'No Element',
+              color: '#ffc53c',
+            },
+          ],
+          nodeData,
+          nodeAction,
+          data?.windowList.find(
+            (window: any) => window.id === currentWindow
+          )?.scriptData.data
+        )
       );
 
-      runtime.callEvent('selenod.event.onLoad');
+      runtime?.callEvent('selenod.event.onLoad');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentWindow, data]);
 
   return (
@@ -197,6 +204,24 @@ export default function App() {
                     }))`,
                     zIndex: element.index,
                   }}
+                  onClick={() => {
+                    const scriptData = data?.windowList.find(
+                      (window: any) => window.id === currentWindow
+                    )?.scriptData.data;
+
+                    Object.keys(scriptData).forEach((key) => {
+                      if (
+                        scriptData[key].nodeId === 'selenod.event.onClick' &&
+                        scriptData[key].inputConnections.filter(
+                          (connection: any) =>
+                            connection.name === 'target' &&
+                            connection.value === element.name
+                        ).length > 0
+                      ) {
+                        runtime?.executeNode(key);
+                      }
+                    });
+                  }}
                 >
                   {element.text}
                 </pre>
@@ -233,6 +258,24 @@ export default function App() {
                         : element.rotation
                     }))`,
                     zIndex: element.index,
+                  }}
+                  onClick={() => {
+                    const scriptData = data?.windowList.find(
+                      (window: any) => window.id === currentWindow
+                    )?.scriptData.data;
+
+                    Object.keys(scriptData).forEach((key) => {
+                      if (
+                        scriptData[key].nodeId === 'selenod.event.onClick' &&
+                        scriptData[key].inputConnections.filter(
+                          (connection: any) =>
+                            connection.name === 'target' &&
+                            connection.value === element.name
+                        ).length > 0
+                      ) {
+                        runtime?.executeNode(key);
+                      }
+                    });
                   }}
                 />
               );
@@ -278,6 +321,24 @@ export default function App() {
                     })`,
                     zIndex: element.index,
                   }}
+                  onClick={() => {
+                    const scriptData = data?.windowList.find(
+                      (window: any) => window.id === currentWindow
+                    )?.scriptData.data;
+
+                    Object.keys(scriptData).forEach((key) => {
+                      if (
+                        scriptData[key].nodeId === 'selenod.event.onClick' &&
+                        scriptData[key].inputConnections.filter(
+                          (connection: any) =>
+                            connection.name === 'target' &&
+                            connection.value === element.name
+                        ).length > 0
+                      ) {
+                        runtime?.executeNode(key);
+                      }
+                    });
+                  }}
                 />
               );
             case 'video':
@@ -320,6 +381,24 @@ export default function App() {
                         : element.borderRadius
                     })`,
                     zIndex: element.index,
+                  }}
+                  onClick={() => {
+                    const scriptData = data?.windowList.find(
+                      (window: any) => window.id === currentWindow
+                    )?.scriptData.data;
+
+                    Object.keys(scriptData).forEach((key) => {
+                      if (
+                        scriptData[key].nodeId === 'selenod.event.onClick' &&
+                        scriptData[key].inputConnections.filter(
+                          (connection: any) =>
+                            connection.name === 'target' &&
+                            connection.value === element.name
+                        ).length > 0
+                      ) {
+                        runtime?.executeNode(key);
+                      }
+                    });
                   }}
                 >
                   <source
@@ -379,6 +458,24 @@ export default function App() {
                     zIndex: element.index,
                     cursor: 'pointer',
                   }}
+                  onClick={() => {
+                    const scriptData = data?.windowList.find(
+                      (window: any) => window.id === currentWindow
+                    )?.scriptData.data;
+
+                    Object.keys(scriptData).forEach((key) => {
+                      if (
+                        scriptData[key].nodeId === 'selenod.event.onClick' &&
+                        scriptData[key].inputConnections.filter(
+                          (connection: any) =>
+                            connection.name === 'target' &&
+                            connection.value === element.name
+                        ).length > 0
+                      ) {
+                        runtime?.executeNode(key);
+                      }
+                    });
+                  }}
                 >
                   <p
                     style={{
@@ -434,12 +531,61 @@ export default function App() {
                         : element.borderRadius
                     })`,
                     boxSizing: 'border-box',
-                    border: element.isChecked
-                      ? undefined
-                      : `1.5px solid ${element.borderColor}`,
+                    border:
+                      checked[
+                        Object.keys(checked).find(
+                          (key) => key === element.id.toString()
+                        )!
+                      ] ?? element.isChecked
+                        ? undefined
+                        : `1.5px solid ${element.borderColor}`,
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => {
+                    let value: boolean = !element.isChecked;
+
+                    if (
+                      Object.keys(checked).includes(element.id.toString()) &&
+                      Object.keys(checked).find(
+                        (key) => key === element.id.toString()
+                      ) !== undefined
+                    ) {
+                      value =
+                        !checked[
+                          Object.keys(checked).find(
+                            (key) => key === element.id.toString()
+                          )!
+                        ];
+                    }
+
+                    setChecked({
+                      ...checked,
+                      [element.id.toString()]: value,
+                    });
+
+                    const scriptData = data?.windowList.find(
+                      (window: any) => window.id === currentWindow
+                    )?.scriptData.data;
+
+                    Object.keys(scriptData).forEach((key) => {
+                      if (
+                        scriptData[key].nodeId === 'selenod.event.onClick' &&
+                        scriptData[key].inputConnections.filter(
+                          (connection: any) =>
+                            connection.name === 'target' &&
+                            connection.value === element.name
+                        ).length > 0
+                      ) {
+                        runtime?.executeNode(key);
+                      }
+                    });
                   }}
                 >
-                  {element.isChecked ? (
+                  {checked[
+                    Object.keys(checked).find(
+                      (key) => key === element.id.toString()
+                    )!
+                  ] ?? element.isChecked ? (
                     <div
                       style={{
                         width: '100%',
@@ -450,7 +596,6 @@ export default function App() {
                             ? `${element.borderRadius}px`
                             : element.borderRadius
                         })`,
-                        cursor: 'pointer',
                       }}
                     >
                       <svg
@@ -514,6 +659,24 @@ export default function App() {
                   }}
                   type="text"
                   placeholder={element.text}
+                  onClick={() => {
+                    const scriptData = data?.windowList.find(
+                      (window: any) => window.id === currentWindow
+                    )?.scriptData.data;
+
+                    Object.keys(scriptData).forEach((key) => {
+                      if (
+                        scriptData[key].nodeId === 'selenod.event.onClick' &&
+                        scriptData[key].inputConnections.filter(
+                          (connection: any) =>
+                            connection.name === 'target' &&
+                            connection.value === element.name
+                        ).length > 0
+                      ) {
+                        runtime?.executeNode(key);
+                      }
+                    });
+                  }}
                 />
               );
             case 'ml-input':
@@ -558,6 +721,24 @@ export default function App() {
                     color: element.color,
                   }}
                   placeholder={element.text}
+                  onClick={() => {
+                    const scriptData = data?.windowList.find(
+                      (window: any) => window.id === currentWindow
+                    )?.scriptData.data;
+
+                    Object.keys(scriptData).forEach((key) => {
+                      if (
+                        scriptData[key].nodeId === 'selenod.event.onClick' &&
+                        scriptData[key].inputConnections.filter(
+                          (connection: any) =>
+                            connection.name === 'target' &&
+                            connection.value === element.name
+                        ).length > 0
+                      ) {
+                        runtime?.executeNode(key);
+                      }
+                    });
+                  }}
                 />
               );
             default:

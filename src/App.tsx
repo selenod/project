@@ -4,74 +4,81 @@ import { landingURL } from './config/config';
 import api from './config/api';
 import Runtime from '@ieum-lang/ieum-runtime';
 import DefaultTypes from '@ieum-lang/ieum/dist/data/type/DefaultTypes';
-import { nodeAction, nodeData } from './data/data';
+import { nodeData } from './data/data';
+import { NodesAction } from '@ieum-lang/ieum-runtime/dist/data/NodeAction';
+import IEUM_listAction from '@ieum-lang/ieum-runtime/dist/data/defaultNodesAction/dictNodesAction';
+import IEUM_dictAction from '@ieum-lang/ieum-runtime/dist/data/defaultNodesAction/listNodesAction';
+import IEUM_mathAction from '@ieum-lang/ieum-runtime/dist/data/defaultNodesAction/mathNodesAction';
+import IEUM_variableAction from '@ieum-lang/ieum-runtime/dist/data/defaultNodesAction/variableNodesAction';
+import IEUM_logicAction from '@ieum-lang/ieum-runtime/dist/data/defaultNodesAction/logicNodesAction';
+
+enum Part {
+  HORIZONTAL = 'Horizontal',
+  VERTICAL = 'Vertical',
+}
+
+enum ElementType {
+  TEXT = 'text',
+  LINE = 'line',
+  IMAGE = 'image',
+  VIDEO = 'video',
+  BUTTON = 'button',
+  CHECKBOX = 'checkbox',
+  SLINPUT = 'sl-input',
+  MLINPUT = 'ml-input',
+}
+
+enum AssetType {
+  FILE = 'file',
+  FOLDER = 'folder',
+}
+
+interface Window {
+  width: number;
+  height: number;
+  themeColor: string;
+  route: string;
+}
+
+interface Element {
+  name: string;
+  id: number;
+  isShown: boolean;
+  type: ElementType;
+  // Position
+  x: string;
+  y: string;
+  xAlign: number;
+  yAlign: number;
+  rotation: string;
+  index: number;
+  // Size
+  width?: string;
+  height?: string;
+  // Text
+  text?: string;
+  fontSize?: number;
+  fontWeight?: number;
+  color?: string;
+  backgroundColor?: string;
+  borderRadius?: string;
+  borderColor?: string;
+  part?: Part;
+  src?: number;
+  canControl?: boolean;
+  isChecked?: boolean;
+}
+
+interface Asset {
+  name: string;
+  id: number;
+  type: AssetType;
+  contents?: string;
+  extension?: string;
+  isOpened?: boolean;
+}
 
 export default function App() {
-  enum Part {
-    HORIZONTAL = 'Horizontal',
-    VERTICAL = 'Vertical',
-  }
-
-  enum ElementType {
-    TEXT = 'text',
-    LINE = 'line',
-    IMAGE = 'image',
-    VIDEO = 'video',
-    BUTTON = 'button',
-    CHECKBOX = 'checkbox',
-    SLINPUT = 'sl-input',
-    MLINPUT = 'ml-input',
-  }
-
-  enum AssetType {
-    FILE = 'file',
-    FOLDER = 'folder',
-  }
-
-  interface Window {
-    width: number;
-    height: number;
-    themeColor: string;
-    route: string;
-  }
-
-  interface Element {
-    name: string;
-    id: number;
-    type: ElementType;
-    // Posiiton
-    x: string;
-    y: string;
-    xAlign: number;
-    yAlign: number;
-    rotation: string;
-    index: number;
-    // Size
-    width?: string;
-    height?: string;
-    // Text
-    text?: string;
-    fontSize?: number;
-    fontWeight?: number;
-    color?: string;
-    backgroundColor?: string;
-    borderRadius?: string;
-    borderColor?: string;
-    part?: Part;
-    src?: number;
-    canControl?: boolean;
-    isChecked?: boolean;
-  }
-
-  interface Asset {
-    name: string;
-    id: number;
-    type: AssetType;
-    contents?: string;
-    extension?: string;
-    isOpened?: boolean;
-  }
-
   const { projectID, pageID } = useParams();
   const [data, setData] = useState<{
     name: string;
@@ -90,11 +97,54 @@ export default function App() {
     assetLength: number;
     route: string;
   }>();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  let subData: {
+    name: string;
+    windowList: Array<{
+      _id: string;
+      name: string;
+      id: number;
+      windowData: Window;
+      scriptData: any;
+      elementData: Array<Element>;
+    }>;
+    assetList: Array<{
+      id: number;
+    }>;
+    assetData: Array<Asset>;
+    assetLength: number;
+    route: string;
+  };
   const [currentWindow, setCurrentWindow] = useState<number>();
   const [runtime, setRuntime] = useState<Runtime>();
-  const [checked, setChecked] = useState<{
-    [key: string]: boolean;
-  }>({});
+  const [runtimeProgress, setRuntimeProgress] = useState<number>(0);
+  // NodeAction Field
+  const [eventNodeAction, setEvent] = useState<NodesAction>();
+  const [typeNodeAction, setType] = useState<NodesAction>();
+  const [statementNodeAction, setStatement] = useState<NodesAction>();
+  const [debugNodeAction, setDebug] = useState<NodesAction>();
+  const [elementNodeAction, setElement] = useState<NodesAction>();
+
+  const modifyData = (data: {
+    name: string;
+    windowList: Array<{
+      _id: string;
+      name: string;
+      id: number;
+      windowData: Window;
+      scriptData: any;
+      elementData: Array<Element>;
+    }>;
+    assetList: Array<{
+      id: number;
+    }>;
+    assetData: Array<Asset>;
+    assetLength: number;
+    route: string;
+  }) => {
+    subData = data;
+    setData(data);
+  };
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -128,39 +178,1097 @@ export default function App() {
   }, [pageID, projectID]);
 
   useEffect(() => {
-    if (currentWindow !== null && data) {
-      const elementNames = data?.windowList
-        .find((window: any) => window.id === currentWindow)
-        ?.elementData.map((data) => data.name);
+    if (currentWindow !== null && data && runtimeProgress === 0) {
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      subData = data;
 
+      setEvent({
+        'selenod.event.onLoad': (input: { execute: string }, runtime) => {
+          runtime.executeNode(input.execute);
+
+          return {};
+        },
+        'selenod.event.onClick': (
+          input: {
+            target: any;
+            execute: string;
+          },
+          runtime
+        ) => {
+          if (input.target.value ?? input.target === 'No Element') {
+            return {};
+          }
+
+          runtime.executeNode(input.execute);
+
+          return {};
+        },
+        'selenod.event.onUpdate': (input: { execute: string }, runtime) => {
+          runtime.executeNode(input.execute);
+
+          return {};
+        },
+      });
+      setType({
+        'selenod.string.constructor': (input: { value: any }) => {
+          return { return: input.value.value ?? input.value };
+        },
+        'selenod.int.constructor': (input: { value: any }) => {
+          return { return: input.value.value ?? input.value };
+        },
+        'selenod.float.constructor': (input: { value: any }) => {
+          return { return: input.value.value ?? input.value };
+        },
+        'selenod.bool.constructor': (input: { value: any }) => {
+          return { return: input.value.value ?? input.value };
+        },
+        'selenod.string.concatenate': (input: {
+          value1: { value: any };
+          value2: { value: any };
+        }) => {
+          return {
+            return:
+              (input.value1.value ?? input.value1) +
+              (input.value2.value ?? input.value2),
+          };
+        },
+        'selenod.string.toString': (input: { value: any }) => {
+          return { return: input.value.toString() };
+        },
+        'selenod.int.toInt': (input: { value: any }) => {
+          return { return: parseInt(input.value) };
+        },
+        'selenod.float.toFloat': (input: { value: any }) => {
+          return { return: parseFloat(input.value) };
+        },
+      });
+      setStatement({
+        'selenod.statement.branch': (
+          input: {
+            condition: { value: boolean };
+            true: string;
+            false: string;
+          },
+          runtime
+        ) => {
+          runtime.executeNode(input.condition.value ? input.true : input.false);
+
+          return {};
+        },
+        'selenod.statement.if': (input: {
+          condition: { value?: boolean };
+          true: { value?: any };
+          false: { value?: any };
+        }) => {
+          return {
+            return:
+              input.condition.value ?? input.condition
+                ? input.true.value ?? input.true
+                : input.false.value ?? input.false,
+          };
+        },
+        'selenod.statement.while': (
+          input: {
+            condition: string;
+            execute: string;
+          },
+          runtime
+        ) => {
+          while (true) {
+            const condition = runtime.executeNode(input.condition);
+
+            if (condition.return.value) {
+              runtime.executeNode(input.execute);
+            } else {
+              break;
+            }
+          }
+
+          return {};
+        },
+        'selenod.statement.repeat': (
+          input: {
+            count: { value?: number };
+            execute: string;
+          },
+          runtime
+        ) => {
+          for (let i = 0; i < (input.count.value ?? input.count); i++) {
+            runtime.executeNode(input.execute);
+          }
+
+          return {};
+        },
+        'selenod.statement.sleep': (
+          input: {
+            delay: any;
+            execute: string;
+          },
+          runtime
+        ) => {
+          setTimeout(() => {
+            runtime.executeNode(input.execute);
+          }, (input.delay.value ?? input.delay) * 1000);
+
+          return {};
+        },
+      });
+      setDebug({
+        'selenod.debug.print': (input: { message: any }) => {
+          console.log(input.message);
+
+          return {};
+        },
+        'selenod.debug.alert': (input: { message: any }) => {
+          alert(input.message.value ?? input.message);
+
+          return {};
+        },
+        'selenod.debug.try': (
+          input: { execute: string; catch: string },
+          runtime
+        ) => {
+          try {
+            runtime?.executeNode(input.execute);
+          } catch (e: any) {
+            runtime?.executeNode(input.catch);
+          }
+
+          return {};
+        },
+      });
+      setElement({
+        'selenod.element.getByName': (input: { name: any }) => {
+          return {
+            name: subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.name === input.name)?.name,
+            id: subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.name === input.name)?.id,
+            x: subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.name === input.name)?.x,
+            y: subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.name === input.name)?.y,
+            'x Align': subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.name === input.name)
+              ?.xAlign,
+            'y Align': subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.name === input.name)
+              ?.yAlign,
+            'is Shown': subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.name === input.name)
+              ?.isShown,
+            rotation: subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.name === input.name)
+              ?.rotation,
+            index: subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.name === input.name)
+              ?.index,
+            width: subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.name === input.name)
+              ?.width,
+            height: subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.name === input.name)
+              ?.height,
+            text: subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.name === input.name)?.text,
+            'font Size': subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.name === input.name)
+              ?.fontSize,
+            'font Weight': subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.name === input.name)
+              ?.fontWeight,
+            color: subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.name === input.name)
+              ?.color,
+            'background Color': subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.name === input.name)
+              ?.backgroundColor,
+            'border Radius': subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.name === input.name)
+              ?.borderRadius,
+            'border Color': subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.name === input.name)
+              ?.borderColor,
+            'is Checked': subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.name === input.name)
+              ?.isChecked,
+            'asset Id': subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.name === input.name)?.src,
+          };
+        },
+        'selenod.element.getById': (input: { id: any }) => {
+          return {
+            name: subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.id === input.id)?.name,
+            id: subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.id === input.id)?.id,
+            x: subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.id === input.id)?.x,
+            y: subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.id === input.id)?.y,
+            'x Align': subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.id === input.id)?.xAlign,
+            'y Align': subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.id === input.id)?.yAlign,
+            'is Shown': subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.id === input.id)?.isShown,
+            rotation: subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.id === input.id)?.rotation,
+            index: subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.id === input.id)?.index,
+            width: subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.id === input.id)?.width,
+            height: subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.id === input.id)?.height,
+            text: subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.id === input.id)?.text,
+            'font Size': subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.id === input.id)?.fontSize,
+            'font Weight': subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.id === input.id)
+              ?.fontWeight,
+            color: subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.id === input.id)?.color,
+            'background Color': subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.id === input.id)
+              ?.backgroundColor,
+            'border Radius': subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.id === input.id)
+              ?.borderRadius,
+            'border Color': subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.id === input.id)
+              ?.borderColor,
+            'is Checked': subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.id === input.id)
+              ?.isChecked,
+            'asset Id': subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.find((element) => element.id === input.id)?.src,
+          };
+        },
+        'selenod.element.getList': () => {
+          return {
+            'name List': subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData.map((element) => element.name),
+          };
+        },
+        'selenod.element.create': (input: {
+          name: string;
+          type: any;
+          'is Shown': any;
+        }) => {
+          modifyData({
+            ...subData,
+            windowList: [
+              ...subData.windowList.filter(
+                (window: any) => window.id !== currentWindow
+              ),
+              {
+                ...subData?.windowList.find(
+                  (window: any) => window.id === currentWindow
+                )!,
+                elementData: [
+                  ...subData?.windowList.find(
+                    (window: any) => window.id === currentWindow
+                  )!.elementData,
+                  {
+                    id:
+                      subData?.windowList.find(
+                        (window: any) => window.id === currentWindow
+                      )!.elementData.length === 0
+                        ? 0
+                        : subData?.windowList.find(
+                            (window: any) => window.id === currentWindow
+                          )!.elementData[
+                            subData?.windowList.find(
+                              (window: any) => window.id === currentWindow
+                            )!.elementData.length - 1
+                          ].id + 1,
+                    name: input.name,
+                    type:
+                      input.type === 'Text'
+                        ? ElementType.TEXT
+                        : input.type === 'Line'
+                        ? ElementType.LINE
+                        : input.type === 'Image'
+                        ? ElementType.IMAGE
+                        : input.type === 'Button'
+                        ? ElementType.BUTTON
+                        : input.type === 'Checkbox'
+                        ? ElementType.CHECKBOX
+                        : input.type === 'Single-Line Input'
+                        ? ElementType.SLINPUT
+                        : ElementType.MLINPUT,
+                    isShown: input['is Shown'],
+                    x: '0',
+                    y: '0',
+                    xAlign: 0,
+                    yAlign: 0,
+                    rotation: '0',
+                    index: 0,
+                  },
+                ],
+              },
+            ],
+          });
+
+          return {
+            id:
+              subData?.windowList.find(
+                (window: any) => window.id === currentWindow
+              )!.elementData.length === 0
+                ? 0
+                : subData?.windowList.find(
+                    (window: any) => window.id === currentWindow
+                  )!.elementData[
+                    subData?.windowList.find(
+                      (window: any) => window.id === currentWindow
+                    )!.elementData.length - 1
+                  ].id,
+          };
+        },
+        'selenod.element.deleteByName': (input: { name: string }) => {
+          modifyData({
+            ...subData,
+            windowList: [
+              ...subData.windowList.filter(
+                (window: any) => window.id !== currentWindow
+              ),
+              {
+                ...subData?.windowList.find(
+                  (window: any) => window.id === currentWindow
+                )!,
+                elementData: [
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)!
+                    .elementData.filter(
+                      (element) => element.name !== input.name
+                    ),
+                ],
+              },
+            ],
+          });
+
+          return {};
+        },
+        'selenod.element.deleteById': (input: { id: number }) => {
+          modifyData({
+            ...subData,
+            windowList: [
+              ...subData.windowList.filter(
+                (window: any) => window.id !== currentWindow
+              ),
+              {
+                ...subData?.windowList.find(
+                  (window: any) => window.id === currentWindow
+                )!,
+                elementData: [
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)!
+                    .elementData.filter((element) => element.id !== input.id),
+                ],
+              },
+            ],
+          });
+
+          return {};
+        },
+        'selenod.element.rename': (input: { target: any; name: any }) => {
+          modifyData({
+            ...subData,
+            windowList: [
+              ...subData.windowList.filter(
+                (window: any) => window.id !== currentWindow
+              ),
+              {
+                ...subData?.windowList.find(
+                  (window: any) => window.id === currentWindow
+                )!,
+                elementData: [
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)!
+                    .elementData.filter(
+                      (element) =>
+                        element.name !== (input.target.value ?? input.target)
+                    ),
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)
+                    ?.elementData!.filter(
+                      (element) =>
+                        element.name === (input.target.value ?? input.target)
+                    )
+                    ?.map((data) => ({
+                      ...data,
+                      name: input.name,
+                    }))!,
+                ],
+              },
+            ],
+          });
+
+          return {};
+        },
+        'selenod.element.setPos': (input: { target: any; x: any; y: any }) => {
+          modifyData({
+            ...subData,
+            windowList: [
+              ...subData.windowList.filter(
+                (window: any) => window.id !== currentWindow
+              ),
+              {
+                ...subData?.windowList.find(
+                  (window: any) => window.id === currentWindow
+                )!,
+                elementData: [
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)!
+                    .elementData.filter(
+                      (element) =>
+                        element.name !== (input.target.value ?? input.target)
+                    ),
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)
+                    ?.elementData!.filter(
+                      (element) =>
+                        element.name === (input.target.value ?? input.target)
+                    )
+                    ?.map((data) => ({
+                      ...data,
+                      x: input.x.value ?? input.x,
+                      y: input.y.value ?? input.y,
+                    }))!,
+                ],
+              },
+            ],
+          });
+
+          return {};
+        },
+        'selenod.element.setAlign': (input: {
+          target: any;
+          'x Align': any;
+          'y Align': any;
+        }) => {
+          modifyData({
+            ...subData,
+            windowList: [
+              ...subData.windowList.filter(
+                (window: any) => window.id !== currentWindow
+              ),
+              {
+                ...subData?.windowList.find(
+                  (window: any) => window.id === currentWindow
+                )!,
+                elementData: [
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)!
+                    .elementData.filter(
+                      (element) =>
+                        element.name !== (input.target.value ?? input.target)
+                    ),
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)
+                    ?.elementData!.filter(
+                      (element) =>
+                        element.name === (input.target.value ?? input.target)
+                    )
+                    ?.map((data) => ({
+                      ...data,
+                      xAlign: input['x Align'].value ?? input['x Align'],
+                      yAlign: input['y Align'].value ?? input['y Align'],
+                    }))!,
+                ],
+              },
+            ],
+          });
+
+          return {};
+        },
+        'selenod.element.setRotation': (input: {
+          target: any;
+          rotation: any;
+        }) => {
+          modifyData({
+            ...subData,
+            windowList: [
+              ...subData.windowList.filter(
+                (window: any) => window.id !== currentWindow
+              ),
+              {
+                ...subData?.windowList.find(
+                  (window: any) => window.id === currentWindow
+                )!,
+                elementData: [
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)!
+                    .elementData.filter(
+                      (element) =>
+                        element.name !== (input.target.value ?? input.target)
+                    ),
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)
+                    ?.elementData!.filter(
+                      (element) =>
+                        element.name === (input.target.value ?? input.target)
+                    )
+                    ?.map((data) => ({
+                      ...data,
+                      rotation: input.rotation.value ?? input.rotation,
+                    }))!,
+                ],
+              },
+            ],
+          });
+
+          return {};
+        },
+        'selenod.element.setIndex': (input: { target: any; order: any }) => {
+          modifyData({
+            ...subData,
+            windowList: [
+              ...subData.windowList.filter(
+                (window: any) => window.id !== currentWindow
+              ),
+              {
+                ...subData?.windowList.find(
+                  (window: any) => window.id === currentWindow
+                )!,
+                elementData: [
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)!
+                    .elementData.filter(
+                      (element) =>
+                        element.name !== (input.target.value ?? input.target)
+                    ),
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)
+                    ?.elementData!.filter(
+                      (element) =>
+                        element.name === (input.target.value ?? input.target)
+                    )
+                    ?.map((data) => ({
+                      ...data,
+                      index: input.order.value ?? input.order,
+                    }))!,
+                ],
+              },
+            ],
+          });
+
+          return {};
+        },
+        'selenod.element.setShow': (input: {
+          target: any;
+          'is Shown': any;
+        }) => {
+          modifyData({
+            ...subData,
+            windowList: [
+              ...subData.windowList.filter(
+                (window: any) => window.id !== currentWindow
+              ),
+              {
+                ...subData?.windowList.find(
+                  (window: any) => window.id === currentWindow
+                )!,
+                elementData: [
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)!
+                    .elementData.filter(
+                      (element) =>
+                        element.name !== (input.target.value ?? input.target)
+                    ),
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)
+                    ?.elementData!.filter(
+                      (element) =>
+                        element.name === (input.target.value ?? input.target)
+                    )
+                    ?.map((data) => ({
+                      ...data,
+                      isShown: input['is Shown'],
+                    }))!,
+                ],
+              },
+            ],
+          });
+
+          return {};
+        },
+        'selenod.element.setSize': (input: {
+          target: any;
+          width: any;
+          height: any;
+        }) => {
+          modifyData({
+            ...subData,
+            windowList: [
+              ...subData.windowList.filter(
+                (window: any) => window.id !== currentWindow
+              ),
+              {
+                ...subData?.windowList.find(
+                  (window: any) => window.id === currentWindow
+                )!,
+                elementData: [
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)!
+                    .elementData.filter(
+                      (element) =>
+                        element.name !== (input.target.value ?? input.target)
+                    ),
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)
+                    ?.elementData!.filter(
+                      (element) =>
+                        element.name === (input.target.value ?? input.target)
+                    )
+                    ?.map((data) => ({
+                      ...data,
+                      width: input.width.value ?? input.width,
+                      height: input.height.value ?? input.height,
+                    }))!,
+                ],
+              },
+            ],
+          });
+
+          return {};
+        },
+        'selenod.element.setText': (input: { target: any; text: any }) => {
+          modifyData({
+            ...subData,
+            windowList: [
+              ...subData.windowList.filter(
+                (window: any) => window.id !== currentWindow
+              ),
+              {
+                ...subData?.windowList.find(
+                  (window: any) => window.id === currentWindow
+                )!,
+                elementData: [
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)!
+                    .elementData.filter(
+                      (element) =>
+                        element.name !== (input.target.value ?? input.target)
+                    ),
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)
+                    ?.elementData!.filter(
+                      (element) =>
+                        element.name === (input.target.value ?? input.target)
+                    )
+                    ?.map((data) => ({
+                      ...data,
+                      text: input.text.value ?? input.text,
+                    }))!,
+                ],
+              },
+            ],
+          });
+
+          return {};
+        },
+        'selenod.element.setFontSize': (input: { target: any; size: any }) => {
+          modifyData({
+            ...subData,
+            windowList: [
+              ...subData.windowList.filter(
+                (window: any) => window.id !== currentWindow
+              ),
+              {
+                ...subData?.windowList.find(
+                  (window: any) => window.id === currentWindow
+                )!,
+                elementData: [
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)!
+                    .elementData.filter(
+                      (element) =>
+                        element.name !== (input.target.value ?? input.target)
+                    ),
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)
+                    ?.elementData!.filter(
+                      (element) =>
+                        element.name === (input.target.value ?? input.target)
+                    )
+                    ?.map((data) => ({
+                      ...data,
+                      fontSize: input.size.value ?? input.size,
+                    }))!,
+                ],
+              },
+            ],
+          });
+
+          return {};
+        },
+        'selenod.element.setFontWeight': (input: {
+          target: any;
+          weight: any;
+        }) => {
+          modifyData({
+            ...subData,
+            windowList: [
+              ...subData.windowList.filter(
+                (window: any) => window.id !== currentWindow
+              ),
+              {
+                ...subData?.windowList.find(
+                  (window: any) => window.id === currentWindow
+                )!,
+                elementData: [
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)!
+                    .elementData.filter(
+                      (element) =>
+                        element.name !== (input.target.value ?? input.target)
+                    ),
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)
+                    ?.elementData!.filter(
+                      (element) =>
+                        element.name === (input.target.value ?? input.target)
+                    )
+                    ?.map((data) => ({
+                      ...data,
+                      fontWeight: input.weight.value ?? input.weight,
+                    }))!,
+                ],
+              },
+            ],
+          });
+
+          return {};
+        },
+        'selenod.element.setColor': (input: { target: any; color: any }) => {
+          modifyData({
+            ...subData,
+            windowList: [
+              ...subData.windowList.filter(
+                (window: any) => window.id !== currentWindow
+              ),
+              {
+                ...subData?.windowList.find(
+                  (window: any) => window.id === currentWindow
+                )!,
+                elementData: [
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)!
+                    .elementData.filter(
+                      (element) =>
+                        element.name !== (input.target.value ?? input.target)
+                    ),
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)
+                    ?.elementData!.filter(
+                      (element) =>
+                        element.name === (input.target.value ?? input.target)
+                    )
+                    ?.map((data) => ({
+                      ...data,
+                      color: input.color.value ?? input.color,
+                    }))!,
+                ],
+              },
+            ],
+          });
+
+          return {};
+        },
+        'selenod.element.setBackgroundColor': (input: {
+          target: any;
+          color: any;
+        }) => {
+          modifyData({
+            ...subData,
+            windowList: [
+              ...subData.windowList.filter(
+                (window: any) => window.id !== currentWindow
+              ),
+              {
+                ...subData?.windowList.find(
+                  (window: any) => window.id === currentWindow
+                )!,
+                elementData: [
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)!
+                    .elementData.filter(
+                      (element) =>
+                        element.name !== (input.target.value ?? input.target)
+                    ),
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)
+                    ?.elementData!.filter(
+                      (element) =>
+                        element.name === (input.target.value ?? input.target)
+                    )
+                    ?.map((data) => ({
+                      ...data,
+                      backgroundColor: input.color.value ?? input.color,
+                    }))!,
+                ],
+              },
+            ],
+          });
+
+          return {};
+        },
+        'selenod.element.setBorderRadius': (input: {
+          target: any;
+          radius: any;
+        }) => {
+          modifyData({
+            ...subData,
+            windowList: [
+              ...subData.windowList.filter(
+                (window: any) => window.id !== currentWindow
+              ),
+              {
+                ...subData?.windowList.find(
+                  (window: any) => window.id === currentWindow
+                )!,
+                elementData: [
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)!
+                    .elementData.filter(
+                      (element) =>
+                        element.name !== (input.target.value ?? input.target)
+                    ),
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)
+                    ?.elementData!.filter(
+                      (element) =>
+                        element.name === (input.target.value ?? input.target)
+                    )
+                    ?.map((data) => ({
+                      ...data,
+                      borderRadius: input.radius.value ?? input.radius,
+                    }))!,
+                ],
+              },
+            ],
+          });
+
+          return {};
+        },
+        'selenod.element.setBorderColor': (input: {
+          target: any;
+          color: any;
+        }) => {
+          modifyData({
+            ...subData,
+            windowList: [
+              ...subData.windowList.filter(
+                (window: any) => window.id !== currentWindow
+              ),
+              {
+                ...subData?.windowList.find(
+                  (window: any) => window.id === currentWindow
+                )!,
+                elementData: [
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)!
+                    .elementData.filter(
+                      (element) =>
+                        element.name !== (input.target.value ?? input.target)
+                    ),
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)
+                    ?.elementData!.filter(
+                      (element) =>
+                        element.name === (input.target.value ?? input.target)
+                    )
+                    ?.map((data) => ({
+                      ...data,
+                      borderColor: input.color.value ?? input.color,
+                    }))!,
+                ],
+              },
+            ],
+          });
+
+          return {};
+        },
+        'selenod.element.setChecked': (input: {
+          target: any;
+          'is Checked': any;
+        }) => {
+          modifyData({
+            ...subData,
+            windowList: [
+              ...subData.windowList.filter(
+                (window: any) => window.id !== currentWindow
+              ),
+              {
+                ...subData?.windowList.find(
+                  (window: any) => window.id === currentWindow
+                )!,
+                elementData: [
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)!
+                    .elementData.filter(
+                      (element) =>
+                        element.name !== (input.target.value ?? input.target)
+                    ),
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)
+                    ?.elementData!.filter(
+                      (element) =>
+                        element.name === (input.target.value ?? input.target)
+                    )
+                    ?.map((data) => ({
+                      ...data,
+                      isChecked:
+                        input['is Checked'].value ?? input['is Checked'],
+                    }))!,
+                ],
+              },
+            ],
+          });
+
+          return {};
+        },
+        'selenod.element.setAsset': (input: {
+          target: any;
+          'asset Id': any;
+        }) => {
+          modifyData({
+            ...subData,
+            windowList: [
+              ...subData.windowList.filter(
+                (window: any) => window.id !== currentWindow
+              ),
+              {
+                ...subData?.windowList.find(
+                  (window: any) => window.id === currentWindow
+                )!,
+                elementData: [
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)!
+                    .elementData.filter(
+                      (element) =>
+                        element.name !== (input.target.value ?? input.target)
+                    ),
+                  ...subData?.windowList
+                    .find((window: any) => window.id === currentWindow)
+                    ?.elementData!.filter(
+                      (element) =>
+                        element.name === (input.target.value ?? input.target)
+                    )
+                    ?.map((data) => ({
+                      ...data,
+                      src: input['asset Id'],
+                    }))!,
+                ],
+              },
+            ],
+          });
+
+          return {};
+        },
+      });
+
+      setRuntimeProgress(1);
+    } else if (runtimeProgress === 1) {
       setRuntime(
         new Runtime(
           [
             ...DefaultTypes,
             {
-              name: 'enum',
+              name: 'elementType',
               elements: [
-                'No Element',
-                ...elementNames!.filter(
-                  (data, index) => elementNames?.indexOf(data) === index
-                ),
+                'Text',
+                'Line',
+                'Image',
+                'Button',
+                'Checkbox',
+                'Single-Line Input',
+                'Multiple-Line Input',
               ],
-              initialValue: 'No Element',
-              color: '#ffc53c',
+              initialValue: 'Text',
+              color: '#b86cff',
             },
           ],
           nodeData,
-          nodeAction,
+          {
+            ...eventNodeAction,
+            ...typeNodeAction,
+            ...IEUM_listAction,
+            ...IEUM_dictAction,
+            ...statementNodeAction,
+            ...elementNodeAction,
+            ...debugNodeAction,
+            ...IEUM_mathAction,
+            ...IEUM_variableAction,
+            ...IEUM_logicAction,
+          },
           data?.windowList.find(
             (window: any) => window.id === currentWindow
-          )?.scriptData.data
+          )?.scriptData.data,
+          data?.windowList.find(
+            (window: any) => window.id === currentWindow
+          )?.scriptData.variable
         )
       );
 
-      runtime?.callEvent('selenod.event.onLoad');
+      setRuntimeProgress(2);
+    } else if (runtimeProgress === 2) {
+      runtime?.callEvent('selenod.event.onLoad', {});
+      setRuntimeProgress(3);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentWindow, data]);
+  }, [
+    currentWindow,
+    debugNodeAction,
+    eventNodeAction,
+    runtimeProgress,
+    statementNodeAction,
+    typeNodeAction,
+    runtime,
+  ]);
 
   return (
     <div
@@ -176,7 +1284,8 @@ export default function App() {
     >
       {data?.windowList
         .find((window: any) => window.id === currentWindow)
-        ?.elementData.map((element: any) => {
+        ?.elementData.filter((element) => element.isShown)
+        .map((element: any) => {
           switch (element.type) {
             case 'text':
               return (
@@ -531,36 +1640,42 @@ export default function App() {
                         : element.borderRadius
                     })`,
                     boxSizing: 'border-box',
-                    border:
-                      checked[
-                        Object.keys(checked).find(
-                          (key) => key === element.id.toString()
-                        )!
-                      ] ?? element.isChecked
-                        ? undefined
-                        : `1.5px solid ${element.borderColor}`,
+                    border: element.isChecked
+                      ? undefined
+                      : `1.5px solid ${element.borderColor}`,
                     cursor: 'pointer',
                   }}
                   onClick={() => {
-                    let value: boolean = !element.isChecked;
-
-                    if (
-                      Object.keys(checked).includes(element.id.toString()) &&
-                      Object.keys(checked).find(
-                        (key) => key === element.id.toString()
-                      ) !== undefined
-                    ) {
-                      value =
-                        !checked[
-                          Object.keys(checked).find(
-                            (key) => key === element.id.toString()
-                          )!
-                        ];
-                    }
-
-                    setChecked({
-                      ...checked,
-                      [element.id.toString()]: value,
+                    modifyData({
+                      ...data,
+                      windowList: [
+                        ...data.windowList.filter(
+                          (window: any) => window.id !== currentWindow
+                        ),
+                        {
+                          ...data?.windowList.find(
+                            (window: any) => window.id === currentWindow
+                          )!,
+                          elementData: [
+                            ...data?.windowList
+                              .find(
+                                (window: any) => window.id === currentWindow
+                              )!
+                              .elementData.filter((el) => element.id !== el.id),
+                            ...data.windowList
+                              .find(
+                                (window: any) => window.id === currentWindow
+                              )!
+                              .elementData!.filter(
+                                (el) => element.id === el.id
+                              )!
+                              .map((el) => ({
+                                ...el,
+                                isChecked: !element.isChecked,
+                              })),
+                          ],
+                        },
+                      ],
                     });
 
                     const scriptData = data?.windowList.find(
@@ -581,11 +1696,7 @@ export default function App() {
                     });
                   }}
                 >
-                  {checked[
-                    Object.keys(checked).find(
-                      (key) => key === element.id.toString()
-                    )!
-                  ] ?? element.isChecked ? (
+                  {element.isChecked ? (
                     <div
                       style={{
                         width: '100%',
@@ -596,6 +1707,7 @@ export default function App() {
                             ? `${element.borderRadius}px`
                             : element.borderRadius
                         })`,
+                        cursor: 'pointer',
                       }}
                     >
                       <svg

@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { landingURL } from './config/config';
+import { appURL, landingURL } from './config/config';
 import api from './config/api';
 import Runtime from '@ieum-lang/ieum-runtime';
 import DefaultTypes from '@ieum-lang/ieum/dist/data/type/DefaultTypes';
@@ -8,9 +8,10 @@ import { nodeData } from './data/data';
 import { NodesAction } from '@ieum-lang/ieum-runtime/dist/data/NodeAction';
 import IEUM_listAction from '@ieum-lang/ieum-runtime/dist/data/defaultNodesAction/dictNodesAction';
 import IEUM_dictAction from '@ieum-lang/ieum-runtime/dist/data/defaultNodesAction/listNodesAction';
+import IEUM_stateAction from '@ieum-lang/ieum-runtime/dist/data/defaultNodesAction/statementNodesAction';
 import IEUM_mathAction from '@ieum-lang/ieum-runtime/dist/data/defaultNodesAction/mathNodesAction';
-import IEUM_variableAction from '@ieum-lang/ieum-runtime/dist/data/defaultNodesAction/variableNodesAction';
 import IEUM_logicAction from '@ieum-lang/ieum-runtime/dist/data/defaultNodesAction/logicNodesAction';
+import IEUM_varAction from '@ieum-lang/ieum-runtime/dist/data/defaultNodesAction/variableNodesAction';
 
 enum Part {
   HORIZONTAL = 'Horizontal',
@@ -78,8 +79,21 @@ interface Asset {
   isOpened?: boolean;
 }
 
+class DataClass {
+  static list: {
+    [id: number]: string;
+  } = {};
+  static setTextValue(targetId: number, value: string) {
+    this.list = {
+      ...this.list,
+      [targetId]: value,
+    };
+  }
+}
+
 export default function App() {
   const { projectID, pageID } = useParams();
+
   const [data, setData] = useState<{
     name: string;
     windowList: Array<{
@@ -118,12 +132,17 @@ export default function App() {
   const [currentWindow, setCurrentWindow] = useState<number>();
   const [runtime, setRuntime] = useState<Runtime>();
   const [runtimeProgress, setRuntimeProgress] = useState<number>(0);
+
   // NodeAction Field
   const [eventNodeAction, setEvent] = useState<NodesAction>();
-  const [typeNodeAction, setType] = useState<NodesAction>();
-  const [statementNodeAction, setStatement] = useState<NodesAction>();
+  const [utilitiesNodeAction, setUtilities] = useState<NodesAction>();
   const [debugNodeAction, setDebug] = useState<NodesAction>();
   const [elementNodeAction, setElement] = useState<NodesAction>();
+  const [assetNodeAction, setAsset] = useState<NodesAction>();
+  const [fetchNodeAction, setFetch] = useState<NodesAction>();
+  const [textVars, setTextVars] = useState<{
+    [id: number]: string;
+  }>();
 
   const modifyData = (data: {
     name: string;
@@ -172,9 +191,10 @@ export default function App() {
 
         setData(res.data.project);
       })
-      .catch(() => {
+      .catch((_) => {
         window.location.replace(landingURL);
       });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pageID, projectID]);
 
   useEffect(() => {
@@ -184,18 +204,7 @@ export default function App() {
 
       setEvent({
         'selenod.event.onLoad': (input: { execute: string }, runtime) => {
-          runtime.executeNode(input.execute);
-
-          return {};
-        },
-        'selenod.event.onClick': (
-          input: {
-            target: any;
-            execute: string;
-          },
-          runtime
-        ) => {
-          if (input.target.value ?? input.target === 'No Element') {
+          if (input.execute === undefined) {
             return {};
           }
 
@@ -203,103 +212,39 @@ export default function App() {
 
           return {};
         },
-        'selenod.event.onUpdate': (input: { execute: string }, runtime) => {
+        'selenod.event.onClick': (
+          input: {
+            element: any;
+            execute: string;
+          },
+          runtime
+        ) => {
+          if (input.execute === undefined) {
+            return {};
+          }
+
+          runtime.executeNode(input.execute);
+
+          return {};
+        },
+        'selenod.event.onChange': (
+          input: {
+            element: any;
+            execute: string;
+          },
+          runtime
+        ) => {
+          if (input.execute === undefined) {
+            return {};
+          }
+
           runtime.executeNode(input.execute);
 
           return {};
         },
       });
-      setType({
-        'selenod.string.constructor': (input: { value: any }) => {
-          return { return: input.value.value ?? input.value };
-        },
-        'selenod.int.constructor': (input: { value: any }) => {
-          return { return: input.value.value ?? input.value };
-        },
-        'selenod.float.constructor': (input: { value: any }) => {
-          return { return: input.value.value ?? input.value };
-        },
-        'selenod.bool.constructor': (input: { value: any }) => {
-          return { return: input.value.value ?? input.value };
-        },
-        'selenod.string.concatenate': (input: {
-          value1: { value: any };
-          value2: { value: any };
-        }) => {
-          return {
-            return:
-              (input.value1.value ?? input.value1) +
-              (input.value2.value ?? input.value2),
-          };
-        },
-        'selenod.string.toString': (input: { value: any }) => {
-          return { return: input.value.toString() };
-        },
-        'selenod.int.toInt': (input: { value: any }) => {
-          return { return: parseInt(input.value) };
-        },
-        'selenod.float.toFloat': (input: { value: any }) => {
-          return { return: parseFloat(input.value) };
-        },
-      });
-      setStatement({
-        'selenod.statement.branch': (
-          input: {
-            condition: { value: boolean };
-            true: string;
-            false: string;
-          },
-          runtime
-        ) => {
-          runtime.executeNode(input.condition.value ? input.true : input.false);
-
-          return {};
-        },
-        'selenod.statement.if': (input: {
-          condition: { value?: boolean };
-          true: { value?: any };
-          false: { value?: any };
-        }) => {
-          return {
-            return:
-              input.condition.value ?? input.condition
-                ? input.true.value ?? input.true
-                : input.false.value ?? input.false,
-          };
-        },
-        'selenod.statement.while': (
-          input: {
-            condition: string;
-            execute: string;
-          },
-          runtime
-        ) => {
-          while (true) {
-            const condition = runtime.executeNode(input.condition);
-
-            if (condition.return.value) {
-              runtime.executeNode(input.execute);
-            } else {
-              break;
-            }
-          }
-
-          return {};
-        },
-        'selenod.statement.repeat': (
-          input: {
-            count: { value?: number };
-            execute: string;
-          },
-          runtime
-        ) => {
-          for (let i = 0; i < (input.count.value ?? input.count); i++) {
-            runtime.executeNode(input.execute);
-          }
-
-          return {};
-        },
-        'selenod.statement.sleep': (
+      setUtilities({
+        'selenod.utilities.sleep': (
           input: {
             delay: any;
             execute: string;
@@ -312,9 +257,33 @@ export default function App() {
 
           return {};
         },
+        'selenod.utilities.redirectUrl': (input: {
+          URL: string;
+          'new Tab': boolean;
+        }) => {
+          window.open(input.URL, input['new Tab'] ? '_blank' : '_self');
+
+          return {};
+        },
+        'selenod.utilities.redirectPage': (input: {
+          name: string;
+          'new Tab': boolean;
+        }) => {
+          window.open(
+            appURL +
+              subData.route +
+              '/' +
+              subData.windowList.find(
+                (window: any) => window.name === input.name
+              )!._id!,
+            input['new Tab'] ? '_blank' : '_self'
+          );
+
+          return {};
+        },
       });
       setDebug({
-        'selenod.debug.print': (input: { message: any }) => {
+        'selenod.debug.print': (input: { message: any; param: any }) => {
           console.log(input.message);
 
           return {};
@@ -383,6 +352,13 @@ export default function App() {
             text: subData?.windowList
               .find((window: any) => window.id === currentWindow)!
               .elementData.find((element) => element.name === input.name)?.text,
+            'text Value':
+              DataClass.list[
+                subData?.windowList
+                  .find((window: any) => window.id === currentWindow)!
+                  .elementData.find((element) => element.name === input.name)!
+                  .id
+              ],
             'font Size': subData?.windowList
               .find((window: any) => window.id === currentWindow)!
               .elementData.find((element) => element.name === input.name)
@@ -454,6 +430,12 @@ export default function App() {
             text: subData?.windowList
               .find((window: any) => window.id === currentWindow)!
               .elementData.find((element) => element.id === input.id)?.text,
+            'text Value':
+              DataClass.list[
+                subData?.windowList
+                  .find((window: any) => window.id === currentWindow)!
+                  .elementData.find((element) => element.id === input.id)!.id
+              ],
             'font Size': subData?.windowList
               .find((window: any) => window.id === currentWindow)!
               .elementData.find((element) => element.id === input.id)?.fontSize,
@@ -613,7 +595,7 @@ export default function App() {
 
           return {};
         },
-        'selenod.element.rename': (input: { target: any; name: any }) => {
+        'selenod.element.rename': (input: { element: any; name: any }) => {
           modifyData({
             ...subData,
             windowList: [
@@ -629,13 +611,13 @@ export default function App() {
                     .find((window: any) => window.id === currentWindow)!
                     .elementData.filter(
                       (element) =>
-                        element.name !== (input.target.value ?? input.target)
+                        element.name !== (input.element.value ?? input.element)
                     ),
                   ...subData?.windowList
                     .find((window: any) => window.id === currentWindow)
                     ?.elementData!.filter(
                       (element) =>
-                        element.name === (input.target.value ?? input.target)
+                        element.name === (input.element.value ?? input.element)
                     )
                     ?.map((data) => ({
                       ...data,
@@ -648,7 +630,7 @@ export default function App() {
 
           return {};
         },
-        'selenod.element.setPos': (input: { target: any; x: any; y: any }) => {
+        'selenod.element.setPos': (input: { element: any; x: any; y: any }) => {
           modifyData({
             ...subData,
             windowList: [
@@ -664,13 +646,13 @@ export default function App() {
                     .find((window: any) => window.id === currentWindow)!
                     .elementData.filter(
                       (element) =>
-                        element.name !== (input.target.value ?? input.target)
+                        element.name !== (input.element.value ?? input.element)
                     ),
                   ...subData?.windowList
                     .find((window: any) => window.id === currentWindow)
                     ?.elementData!.filter(
                       (element) =>
-                        element.name === (input.target.value ?? input.target)
+                        element.name === (input.element.value ?? input.element)
                     )
                     ?.map((data) => ({
                       ...data,
@@ -685,7 +667,7 @@ export default function App() {
           return {};
         },
         'selenod.element.setAlign': (input: {
-          target: any;
+          element: any;
           'x Align': any;
           'y Align': any;
         }) => {
@@ -704,13 +686,13 @@ export default function App() {
                     .find((window: any) => window.id === currentWindow)!
                     .elementData.filter(
                       (element) =>
-                        element.name !== (input.target.value ?? input.target)
+                        element.name !== (input.element.value ?? input.element)
                     ),
                   ...subData?.windowList
                     .find((window: any) => window.id === currentWindow)
                     ?.elementData!.filter(
                       (element) =>
-                        element.name === (input.target.value ?? input.target)
+                        element.name === (input.element.value ?? input.element)
                     )
                     ?.map((data) => ({
                       ...data,
@@ -725,7 +707,7 @@ export default function App() {
           return {};
         },
         'selenod.element.setRotation': (input: {
-          target: any;
+          element: any;
           rotation: any;
         }) => {
           modifyData({
@@ -743,13 +725,13 @@ export default function App() {
                     .find((window: any) => window.id === currentWindow)!
                     .elementData.filter(
                       (element) =>
-                        element.name !== (input.target.value ?? input.target)
+                        element.name !== (input.element.value ?? input.element)
                     ),
                   ...subData?.windowList
                     .find((window: any) => window.id === currentWindow)
                     ?.elementData!.filter(
                       (element) =>
-                        element.name === (input.target.value ?? input.target)
+                        element.name === (input.element.value ?? input.element)
                     )
                     ?.map((data) => ({
                       ...data,
@@ -762,7 +744,7 @@ export default function App() {
 
           return {};
         },
-        'selenod.element.setIndex': (input: { target: any; order: any }) => {
+        'selenod.element.setIndex': (input: { element: any; order: any }) => {
           modifyData({
             ...subData,
             windowList: [
@@ -778,13 +760,13 @@ export default function App() {
                     .find((window: any) => window.id === currentWindow)!
                     .elementData.filter(
                       (element) =>
-                        element.name !== (input.target.value ?? input.target)
+                        element.name !== (input.element.value ?? input.element)
                     ),
                   ...subData?.windowList
                     .find((window: any) => window.id === currentWindow)
                     ?.elementData!.filter(
                       (element) =>
-                        element.name === (input.target.value ?? input.target)
+                        element.name === (input.element.value ?? input.element)
                     )
                     ?.map((data) => ({
                       ...data,
@@ -798,7 +780,7 @@ export default function App() {
           return {};
         },
         'selenod.element.setShow': (input: {
-          target: any;
+          element: any;
           'is Shown': any;
         }) => {
           modifyData({
@@ -816,13 +798,13 @@ export default function App() {
                     .find((window: any) => window.id === currentWindow)!
                     .elementData.filter(
                       (element) =>
-                        element.name !== (input.target.value ?? input.target)
+                        element.name !== (input.element.value ?? input.element)
                     ),
                   ...subData?.windowList
                     .find((window: any) => window.id === currentWindow)
                     ?.elementData!.filter(
                       (element) =>
-                        element.name === (input.target.value ?? input.target)
+                        element.name === (input.element.value ?? input.element)
                     )
                     ?.map((data) => ({
                       ...data,
@@ -836,7 +818,7 @@ export default function App() {
           return {};
         },
         'selenod.element.setSize': (input: {
-          target: any;
+          element: any;
           width: any;
           height: any;
         }) => {
@@ -855,13 +837,13 @@ export default function App() {
                     .find((window: any) => window.id === currentWindow)!
                     .elementData.filter(
                       (element) =>
-                        element.name !== (input.target.value ?? input.target)
+                        element.name !== (input.element.value ?? input.element)
                     ),
                   ...subData?.windowList
                     .find((window: any) => window.id === currentWindow)
                     ?.elementData!.filter(
                       (element) =>
-                        element.name === (input.target.value ?? input.target)
+                        element.name === (input.element.value ?? input.element)
                     )
                     ?.map((data) => ({
                       ...data,
@@ -875,7 +857,7 @@ export default function App() {
 
           return {};
         },
-        'selenod.element.setText': (input: { target: any; text: any }) => {
+        'selenod.element.setText': (input: { element: any; text: any }) => {
           modifyData({
             ...subData,
             windowList: [
@@ -891,13 +873,13 @@ export default function App() {
                     .find((window: any) => window.id === currentWindow)!
                     .elementData.filter(
                       (element) =>
-                        element.name !== (input.target.value ?? input.target)
+                        element.name !== (input.element.value ?? input.element)
                     ),
                   ...subData?.windowList
                     .find((window: any) => window.id === currentWindow)
                     ?.elementData!.filter(
                       (element) =>
-                        element.name === (input.target.value ?? input.target)
+                        element.name === (input.element.value ?? input.element)
                     )
                     ?.map((data) => ({
                       ...data,
@@ -910,7 +892,42 @@ export default function App() {
 
           return {};
         },
-        'selenod.element.setFontSize': (input: { target: any; size: any }) => {
+        'selenod.element.setTextValue': (
+          input: {
+            element: any;
+            text: any;
+          },
+          runtime
+        ) => {
+          DataClass.setTextValue(
+            subData?.windowList
+              .find((window: any) => window.id === currentWindow)!
+              .elementData!.find((element) => element.name === input.element)
+              ?.id!,
+            input.text
+          );
+          setTextVars(DataClass.list);
+
+          const scriptData = subData?.windowList.find(
+            (window: any) => window.id === currentWindow
+          )?.scriptData.data;
+
+          Object.keys(scriptData).forEach((key) => {
+            if (
+              scriptData[key].nodeId === 'selenod.event.onChange' &&
+              scriptData[key].inputConnections.filter(
+                (connection: any) =>
+                  connection.name === 'element' &&
+                  connection.value === input.element
+              ).length > 0
+            ) {
+              runtime?.executeNode(key);
+            }
+          });
+
+          return {};
+        },
+        'selenod.element.setFontSize': (input: { element: any; size: any }) => {
           modifyData({
             ...subData,
             windowList: [
@@ -926,13 +943,13 @@ export default function App() {
                     .find((window: any) => window.id === currentWindow)!
                     .elementData.filter(
                       (element) =>
-                        element.name !== (input.target.value ?? input.target)
+                        element.name !== (input.element.value ?? input.element)
                     ),
                   ...subData?.windowList
                     .find((window: any) => window.id === currentWindow)
                     ?.elementData!.filter(
                       (element) =>
-                        element.name === (input.target.value ?? input.target)
+                        element.name === (input.element.value ?? input.element)
                     )
                     ?.map((data) => ({
                       ...data,
@@ -946,7 +963,7 @@ export default function App() {
           return {};
         },
         'selenod.element.setFontWeight': (input: {
-          target: any;
+          element: any;
           weight: any;
         }) => {
           modifyData({
@@ -964,13 +981,13 @@ export default function App() {
                     .find((window: any) => window.id === currentWindow)!
                     .elementData.filter(
                       (element) =>
-                        element.name !== (input.target.value ?? input.target)
+                        element.name !== (input.element.value ?? input.element)
                     ),
                   ...subData?.windowList
                     .find((window: any) => window.id === currentWindow)
                     ?.elementData!.filter(
                       (element) =>
-                        element.name === (input.target.value ?? input.target)
+                        element.name === (input.element.value ?? input.element)
                     )
                     ?.map((data) => ({
                       ...data,
@@ -983,7 +1000,7 @@ export default function App() {
 
           return {};
         },
-        'selenod.element.setColor': (input: { target: any; color: any }) => {
+        'selenod.element.setColor': (input: { element: any; color: any }) => {
           modifyData({
             ...subData,
             windowList: [
@@ -999,13 +1016,13 @@ export default function App() {
                     .find((window: any) => window.id === currentWindow)!
                     .elementData.filter(
                       (element) =>
-                        element.name !== (input.target.value ?? input.target)
+                        element.name !== (input.element.value ?? input.element)
                     ),
                   ...subData?.windowList
                     .find((window: any) => window.id === currentWindow)
                     ?.elementData!.filter(
                       (element) =>
-                        element.name === (input.target.value ?? input.target)
+                        element.name === (input.element.value ?? input.element)
                     )
                     ?.map((data) => ({
                       ...data,
@@ -1019,7 +1036,7 @@ export default function App() {
           return {};
         },
         'selenod.element.setBackgroundColor': (input: {
-          target: any;
+          element: any;
           color: any;
         }) => {
           modifyData({
@@ -1037,13 +1054,13 @@ export default function App() {
                     .find((window: any) => window.id === currentWindow)!
                     .elementData.filter(
                       (element) =>
-                        element.name !== (input.target.value ?? input.target)
+                        element.name !== (input.element.value ?? input.element)
                     ),
                   ...subData?.windowList
                     .find((window: any) => window.id === currentWindow)
                     ?.elementData!.filter(
                       (element) =>
-                        element.name === (input.target.value ?? input.target)
+                        element.name === (input.element.value ?? input.element)
                     )
                     ?.map((data) => ({
                       ...data,
@@ -1057,7 +1074,7 @@ export default function App() {
           return {};
         },
         'selenod.element.setBorderRadius': (input: {
-          target: any;
+          element: any;
           radius: any;
         }) => {
           modifyData({
@@ -1075,13 +1092,13 @@ export default function App() {
                     .find((window: any) => window.id === currentWindow)!
                     .elementData.filter(
                       (element) =>
-                        element.name !== (input.target.value ?? input.target)
+                        element.name !== (input.element.value ?? input.element)
                     ),
                   ...subData?.windowList
                     .find((window: any) => window.id === currentWindow)
                     ?.elementData!.filter(
                       (element) =>
-                        element.name === (input.target.value ?? input.target)
+                        element.name === (input.element.value ?? input.element)
                     )
                     ?.map((data) => ({
                       ...data,
@@ -1095,7 +1112,7 @@ export default function App() {
           return {};
         },
         'selenod.element.setBorderColor': (input: {
-          target: any;
+          element: any;
           color: any;
         }) => {
           modifyData({
@@ -1113,13 +1130,13 @@ export default function App() {
                     .find((window: any) => window.id === currentWindow)!
                     .elementData.filter(
                       (element) =>
-                        element.name !== (input.target.value ?? input.target)
+                        element.name !== (input.element.value ?? input.element)
                     ),
                   ...subData?.windowList
                     .find((window: any) => window.id === currentWindow)
                     ?.elementData!.filter(
                       (element) =>
-                        element.name === (input.target.value ?? input.target)
+                        element.name === (input.element.value ?? input.element)
                     )
                     ?.map((data) => ({
                       ...data,
@@ -1133,7 +1150,7 @@ export default function App() {
           return {};
         },
         'selenod.element.setChecked': (input: {
-          target: any;
+          element: any;
           'is Checked': any;
         }) => {
           modifyData({
@@ -1151,13 +1168,13 @@ export default function App() {
                     .find((window: any) => window.id === currentWindow)!
                     .elementData.filter(
                       (element) =>
-                        element.name !== (input.target.value ?? input.target)
+                        element.name !== (input.element.value ?? input.element)
                     ),
                   ...subData?.windowList
                     .find((window: any) => window.id === currentWindow)
                     ?.elementData!.filter(
                       (element) =>
-                        element.name === (input.target.value ?? input.target)
+                        element.name === (input.element.value ?? input.element)
                     )
                     ?.map((data) => ({
                       ...data,
@@ -1172,7 +1189,7 @@ export default function App() {
           return {};
         },
         'selenod.element.setAsset': (input: {
-          target: any;
+          element: any;
           'asset Id': any;
         }) => {
           modifyData({
@@ -1190,13 +1207,13 @@ export default function App() {
                     .find((window: any) => window.id === currentWindow)!
                     .elementData.filter(
                       (element) =>
-                        element.name !== (input.target.value ?? input.target)
+                        element.name !== (input.element.value ?? input.element)
                     ),
                   ...subData?.windowList
                     .find((window: any) => window.id === currentWindow)
                     ?.elementData!.filter(
                       (element) =>
-                        element.name === (input.target.value ?? input.target)
+                        element.name === (input.element.value ?? input.element)
                     )
                     ?.map((data) => ({
                       ...data,
@@ -1206,6 +1223,114 @@ export default function App() {
               },
             ],
           });
+
+          return {};
+        },
+      });
+      setAsset({
+        'selenod.asset.getByName': (input: { name: string }) => {
+          const asset = data?.assetData.find(
+            (asset) => asset.name + asset.extension === input.name
+          );
+
+          return {
+            name:
+              asset !== undefined &&
+              asset.name !== undefined &&
+              asset.extension !== undefined
+                ? asset.name + asset.extension
+                : undefined,
+            id: asset?.id,
+            contents: asset?.contents,
+          };
+        },
+        'selenod.asset.getById': (input: { id: number }) => {
+          const asset = data?.assetData.find((asset) => asset.id === input.id);
+
+          return {
+            name:
+              asset !== undefined &&
+              asset.name !== undefined &&
+              asset.extension !== undefined
+                ? asset.name + asset.extension
+                : undefined,
+            id: asset?.id,
+            contents: asset?.contents,
+          };
+        },
+      });
+      setFetch({
+        'selenod.fetch.get': (
+          input: {
+            url: string;
+            headers: object;
+            then: string;
+            catch: string;
+          },
+          runtime
+        ) => {
+          let res: object;
+
+          fetch(input.url, {
+            headers: {
+              ...input.headers,
+            },
+          })
+            .then((response) => {
+              res = response;
+
+              return response.json();
+            })
+            .then((data) => {
+              runtime.executeFunc(input.then, {
+                response: res,
+                data,
+              });
+            })
+            .catch((error) => {
+              runtime.executeFunc(input.catch, {
+                response: res,
+                error,
+              });
+            });
+
+          return {};
+        },
+        'selenod.fetch.post': (
+          input: {
+            url: string;
+            headers: object;
+            body: object;
+            then: string;
+            catch: string;
+          },
+          runtime
+        ) => {
+          let res: object;
+
+          fetch(input.url, {
+            method: 'POST',
+            headers: {
+              ...input.headers,
+            },
+            body: JSON.stringify(input.body),
+          })
+            .then((response) => {
+              res = response;
+
+              return response.json();
+            })
+            .then(() => {
+              runtime.executeFunc(input.then, {
+                response: res,
+              });
+            })
+            .catch((error) => {
+              runtime.executeFunc(input.catch, {
+                response: res,
+                error,
+              });
+            });
 
           return {};
         },
@@ -1235,15 +1360,17 @@ export default function App() {
           nodeData,
           {
             ...eventNodeAction,
-            ...typeNodeAction,
             ...IEUM_listAction,
             ...IEUM_dictAction,
-            ...statementNodeAction,
+            ...utilitiesNodeAction,
+            ...fetchNodeAction,
+            ...IEUM_stateAction,
             ...elementNodeAction,
+            ...assetNodeAction,
             ...debugNodeAction,
             ...IEUM_mathAction,
-            ...IEUM_variableAction,
             ...IEUM_logicAction,
+            ...IEUM_varAction,
           },
           data?.windowList.find(
             (window: any) => window.id === currentWindow
@@ -1260,15 +1387,7 @@ export default function App() {
       setRuntimeProgress(3);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    currentWindow,
-    debugNodeAction,
-    eventNodeAction,
-    runtimeProgress,
-    statementNodeAction,
-    typeNodeAction,
-    runtime,
-  ]);
+  }, [currentWindow, runtimeProgress, utilitiesNodeAction, runtime]);
 
   return (
     <div
@@ -1323,7 +1442,7 @@ export default function App() {
                         scriptData[key].nodeId === 'selenod.event.onClick' &&
                         scriptData[key].inputConnections.filter(
                           (connection: any) =>
-                            connection.name === 'target' &&
+                            connection.name === 'element' &&
                             connection.value === element.name
                         ).length > 0
                       ) {
@@ -1378,7 +1497,7 @@ export default function App() {
                         scriptData[key].nodeId === 'selenod.event.onClick' &&
                         scriptData[key].inputConnections.filter(
                           (connection: any) =>
-                            connection.name === 'target' &&
+                            connection.name === 'element' &&
                             connection.value === element.name
                         ).length > 0
                       ) {
@@ -1440,7 +1559,7 @@ export default function App() {
                         scriptData[key].nodeId === 'selenod.event.onClick' &&
                         scriptData[key].inputConnections.filter(
                           (connection: any) =>
-                            connection.name === 'target' &&
+                            connection.name === 'element' &&
                             connection.value === element.name
                         ).length > 0
                       ) {
@@ -1501,7 +1620,7 @@ export default function App() {
                         scriptData[key].nodeId === 'selenod.event.onClick' &&
                         scriptData[key].inputConnections.filter(
                           (connection: any) =>
-                            connection.name === 'target' &&
+                            connection.name === 'element' &&
                             connection.value === element.name
                         ).length > 0
                       ) {
@@ -1577,7 +1696,7 @@ export default function App() {
                         scriptData[key].nodeId === 'selenod.event.onClick' &&
                         scriptData[key].inputConnections.filter(
                           (connection: any) =>
-                            connection.name === 'target' &&
+                            connection.name === 'element' &&
                             connection.value === element.name
                         ).length > 0
                       ) {
@@ -1687,7 +1806,7 @@ export default function App() {
                         scriptData[key].nodeId === 'selenod.event.onClick' &&
                         scriptData[key].inputConnections.filter(
                           (connection: any) =>
-                            connection.name === 'target' &&
+                            connection.name === 'element' &&
                             connection.value === element.name
                         ).length > 0
                       ) {
@@ -1768,9 +1887,36 @@ export default function App() {
                     fontSize: element.fontSize,
                     fontWeight: element.fontWeight,
                     color: element.color,
+                    padding: '0 0.7rem',
                   }}
                   type="text"
                   placeholder={element.text}
+                  value={
+                    textVars !== undefined && textVars[element.id] !== undefined
+                      ? textVars[element.id]
+                      : ''
+                  }
+                  onChange={(e) => {
+                    DataClass.setTextValue(element.id, e.target.value);
+                    setTextVars(DataClass.list);
+
+                    const scriptData = data?.windowList.find(
+                      (window: any) => window.id === currentWindow
+                    )?.scriptData.data;
+
+                    Object.keys(scriptData).forEach((key) => {
+                      if (
+                        scriptData[key].nodeId === 'selenod.event.onChange' &&
+                        scriptData[key].inputConnections.filter(
+                          (connection: any) =>
+                            connection.name === 'element' &&
+                            connection.value === element.name
+                        ).length > 0
+                      ) {
+                        runtime?.executeNode(key);
+                      }
+                    });
+                  }}
                   onClick={() => {
                     const scriptData = data?.windowList.find(
                       (window: any) => window.id === currentWindow
@@ -1781,7 +1927,7 @@ export default function App() {
                         scriptData[key].nodeId === 'selenod.event.onClick' &&
                         scriptData[key].inputConnections.filter(
                           (connection: any) =>
-                            connection.name === 'target' &&
+                            connection.name === 'element' &&
                             connection.value === element.name
                         ).length > 0
                       ) {
@@ -1831,8 +1977,36 @@ export default function App() {
                     fontSize: element.fontSize,
                     fontWeight: element.fontWeight,
                     color: element.color,
+                    resize: 'none',
+                    padding: '0 0.7rem',
                   }}
                   placeholder={element.text}
+                  value={
+                    textVars !== undefined && textVars[element.id] !== undefined
+                      ? textVars[element.id]
+                      : ''
+                  }
+                  onChange={(e) => {
+                    DataClass.setTextValue(element.id, e.target.value);
+                    setTextVars(DataClass.list);
+
+                    const scriptData = data?.windowList.find(
+                      (window: any) => window.id === currentWindow
+                    )?.scriptData.data;
+
+                    Object.keys(scriptData).forEach((key) => {
+                      if (
+                        scriptData[key].nodeId === 'selenod.event.onChange' &&
+                        scriptData[key].inputConnections.filter(
+                          (connection: any) =>
+                            connection.name === 'element' &&
+                            connection.value === element.name
+                        ).length > 0
+                      ) {
+                        runtime?.executeNode(key);
+                      }
+                    });
+                  }}
                   onClick={() => {
                     const scriptData = data?.windowList.find(
                       (window: any) => window.id === currentWindow
@@ -1843,7 +2017,7 @@ export default function App() {
                         scriptData[key].nodeId === 'selenod.event.onClick' &&
                         scriptData[key].inputConnections.filter(
                           (connection: any) =>
-                            connection.name === 'target' &&
+                            connection.name === 'element' &&
                             connection.value === element.name
                         ).length > 0
                       ) {

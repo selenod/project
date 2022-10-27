@@ -3,8 +3,9 @@ import IEUM_listNode from '@ieum-lang/ieum/dist/data/defaultNodes/listNodes';
 import IEUM_dictNode from '@ieum-lang/ieum/dist/data/defaultNodes/dictNodes';
 import IEUM_mathNode from '@ieum-lang/ieum/dist/data/defaultNodes/mathNodes';
 import IEUM_functionNode from '@ieum-lang/ieum/dist/data/defaultNodes/functionNodes';
-import IEUM_variableNode from '@ieum-lang/ieum/dist/data/defaultNodes/variableNodes';
+import IEUM_statementNode from '@ieum-lang/ieum/dist/data/defaultNodes/statementNodes';
 import IEUM_logicNode from '@ieum-lang/ieum/dist/data/defaultNodes/logicNodes';
+import IEUM_varNode from '@ieum-lang/ieum/dist/data/defaultNodes/variableNodes';
 
 // NodeData Field
 const eventNodeData: NodesData = {
@@ -24,7 +25,7 @@ const eventNodeData: NodesData = {
     name: 'On Click',
     inputs: [
       {
-        name: 'target',
+        name: 'element',
         type: {
           type: 'string',
         },
@@ -38,9 +39,15 @@ const eventNodeData: NodesData = {
     ],
     outputs: [],
   },
-  'selenod.event.onUpdate': {
-    name: 'On Update',
+  'selenod.event.onChange': {
+    name: 'On Change',
     inputs: [
+      {
+        name: 'element',
+        type: {
+          type: 'string',
+        },
+      },
       {
         name: 'execute',
         type: {
@@ -49,176 +56,6 @@ const eventNodeData: NodesData = {
       },
     ],
     outputs: [],
-  },
-};
-
-const stringNodeData: NodesData = {
-  'selenod.string.constructor': {
-    name: 'String',
-    inputs: [
-      {
-        name: 'value',
-        type: {
-          type: 'string',
-        },
-      },
-    ],
-    outputs: [
-      {
-        name: 'return',
-        type: {
-          type: 'string',
-        },
-      },
-    ],
-  },
-  'selenod.string.concatenate': {
-    name: 'Concatenate',
-    inputs: [
-      {
-        name: 'value1',
-        type: {
-          type: 'string',
-        },
-      },
-      {
-        name: 'value2',
-        type: {
-          type: 'string',
-        },
-      },
-    ],
-    outputs: [
-      {
-        name: 'return',
-        type: {
-          type: 'string',
-        },
-      },
-    ],
-  },
-  'selenod.string.toString': {
-    name: 'To String',
-    inputs: [
-      {
-        name: 'value',
-        type: {
-          type: 'any',
-        },
-      },
-    ],
-    outputs: [
-      {
-        name: 'return',
-        type: {
-          type: 'string',
-        },
-      },
-    ],
-  },
-};
-
-const intNodeData: NodesData = {
-  'selenod.int.constructor': {
-    name: 'Int',
-    inputs: [
-      {
-        name: 'value',
-        type: {
-          type: 'int',
-        },
-      },
-    ],
-    outputs: [
-      {
-        name: 'return',
-        type: {
-          type: 'int',
-        },
-      },
-    ],
-  },
-  'selenod.int.toInt': {
-    name: 'To Int',
-    inputs: [
-      {
-        name: 'value',
-        type: {
-          type: 'any',
-        },
-      },
-    ],
-    outputs: [
-      {
-        name: 'return',
-        type: {
-          type: 'int',
-        },
-      },
-    ],
-  },
-};
-
-const floatNodeData: NodesData = {
-  'selenod.float.constructor': {
-    name: 'Float',
-    inputs: [
-      {
-        name: 'value',
-        type: {
-          type: 'float',
-        },
-      },
-    ],
-    outputs: [
-      {
-        name: 'return',
-        type: {
-          type: 'float',
-        },
-      },
-    ],
-  },
-  'selenod.float.toFloat': {
-    name: 'To Float',
-    inputs: [
-      {
-        name: 'value',
-        type: {
-          type: 'any',
-        },
-      },
-    ],
-    outputs: [
-      {
-        name: 'return',
-        type: {
-          type: 'float',
-        },
-      },
-    ],
-  },
-};
-
-const boolNodeData: NodesData = {
-  'selenod.bool.constructor': {
-    name: 'Bool',
-    inputs: [
-      {
-        name: 'value',
-        type: {
-          type: 'bool',
-        },
-      },
-    ],
-    outputs: [
-      {
-        name: 'return',
-        type: {
-          type: 'bool',
-        },
-      },
-    ],
   },
 };
 
@@ -267,111 +104,8 @@ const debugNodeData: NodesData = {
   },
 };
 
-const statementNodeData: NodesData = {
-  'selenod.statement.branch': {
-    name: 'Branch',
-    inputs: [
-      {
-        name: 'condition',
-        type: {
-          type: 'bool',
-        },
-      },
-      {
-        name: 'true',
-        type: {
-          type: 'nullable',
-          metadata: {
-            generics: ['T'],
-            genericValues: { T: { type: 'func' } },
-          },
-        },
-      },
-      {
-        name: 'false',
-        type: {
-          type: 'nullable',
-          metadata: {
-            generics: ['T'],
-            genericValues: { T: { type: 'func' } },
-          },
-        },
-      },
-    ],
-    outputs: [],
-  },
-  'selenod.statement.if': {
-    name: 'If',
-    inputs: [
-      {
-        name: 'condition',
-        type: {
-          type: 'bool',
-        },
-      },
-      {
-        name: 'true',
-        type: {
-          type: 'any',
-        },
-      },
-      {
-        name: 'false',
-        type: {
-          type: 'any',
-        },
-      },
-    ],
-    outputs: [
-      {
-        name: 'return',
-        type: {
-          type: 'any',
-        },
-      },
-    ],
-  },
-  'selenod.statement.while': {
-    name: 'While',
-    inputs: [
-      {
-        name: 'condition',
-        type: {
-          type: 'func',
-          metadata: {
-            inputs: [],
-            outputs: [{ name: 'return', type: { type: 'bool' } }],
-          },
-        },
-      },
-      {
-        name: 'execute',
-        type: {
-          type: 'func',
-        },
-      },
-    ],
-    outputs: [],
-  },
-  'selenod.statement.repeat': {
-    name: 'Repeat',
-    inputs: [
-      {
-        name: 'count',
-        type: {
-          type: 'int',
-        },
-      },
-      {
-        name: 'execute',
-        type: {
-          type: 'func',
-        },
-      },
-    ],
-    outputs: [],
-  },
-  'selenod.statement.sleep': {
+const utilitiesNodeData: NodesData = {
+  'selenod.utilities.sleep': {
     name: 'Sleep',
     inputs: [
       {
@@ -389,11 +123,78 @@ const statementNodeData: NodesData = {
     ],
     outputs: [],
   },
+  'selenod.utilities.redirectPage': {
+    name: 'Redirect Page',
+    inputs: [
+      {
+        name: 'name',
+        type: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'new Tab',
+        type: {
+          type: 'bool',
+        },
+      },
+    ],
+    outputs: [],
+  },
+  'selenod.utilities.redirectUrl': {
+    name: 'Redirect URL',
+    inputs: [
+      {
+        name: 'URL',
+        type: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'new Tab',
+        type: {
+          type: 'bool',
+        },
+      },
+    ],
+    outputs: [],
+  },
 };
 
 const elementNodeData: NodesData = {
+  'selenod.element.create': {
+    name: 'Create Element',
+    inputs: [
+      {
+        name: 'name',
+        type: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'type',
+        type: {
+          type: 'elementType',
+        },
+      },
+      {
+        name: 'is Shown',
+        type: {
+          type: 'bool',
+        },
+      },
+    ],
+    outputs: [
+      {
+        name: 'id',
+        type: {
+          type: 'int',
+        },
+      },
+    ],
+  },
   'selenod.element.getByName': {
-    name: 'Get Element By Name',
+    name: 'Get Element by Name',
     inputs: [
       {
         name: 'name',
@@ -471,6 +272,12 @@ const elementNodeData: NodesData = {
       },
       {
         name: 'text',
+        type: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'text Value',
         type: {
           type: 'string',
         },
@@ -526,7 +333,7 @@ const elementNodeData: NodesData = {
     ],
   },
   'selenod.element.getById': {
-    name: 'Get Element By Id',
+    name: 'Get Element by Id',
     inputs: [
       {
         name: 'id',
@@ -604,6 +411,12 @@ const elementNodeData: NodesData = {
       },
       {
         name: 'text',
+        type: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'text Value',
         type: {
           type: 'string',
         },
@@ -674,39 +487,8 @@ const elementNodeData: NodesData = {
       },
     ],
   },
-  'selenod.element.create': {
-    name: 'Create Element',
-    inputs: [
-      {
-        name: 'name',
-        type: {
-          type: 'string',
-        },
-      },
-      {
-        name: 'type',
-        type: {
-          type: 'elementType',
-        },
-      },
-      {
-        name: 'is Shown',
-        type: {
-          type: 'bool',
-        },
-      },
-    ],
-    outputs: [
-      {
-        name: 'id',
-        type: {
-          type: 'int',
-        },
-      },
-    ],
-  },
   'selenod.element.deleteByName': {
-    name: 'Delete Element By Name',
+    name: 'Delete Element by Name',
     inputs: [
       {
         name: 'name',
@@ -718,7 +500,7 @@ const elementNodeData: NodesData = {
     outputs: [],
   },
   'selenod.element.deleteById': {
-    name: 'Delete Element By Id',
+    name: 'Delete Element by Id',
     inputs: [
       {
         name: 'id',
@@ -733,7 +515,7 @@ const elementNodeData: NodesData = {
     name: 'Rename Element',
     inputs: [
       {
-        name: 'target',
+        name: 'element',
         type: {
           type: 'string',
         },
@@ -751,7 +533,7 @@ const elementNodeData: NodesData = {
     name: 'Set Position',
     inputs: [
       {
-        name: 'target',
+        name: 'element',
         type: {
           type: 'string',
         },
@@ -775,7 +557,7 @@ const elementNodeData: NodesData = {
     name: 'Set Align',
     inputs: [
       {
-        name: 'target',
+        name: 'element',
         type: {
           type: 'string',
         },
@@ -799,7 +581,7 @@ const elementNodeData: NodesData = {
     name: 'Set Rotation',
     inputs: [
       {
-        name: 'target',
+        name: 'element',
         type: {
           type: 'string',
         },
@@ -817,7 +599,7 @@ const elementNodeData: NodesData = {
     name: 'Set Index Order',
     inputs: [
       {
-        name: 'target',
+        name: 'element',
         type: {
           type: 'string',
         },
@@ -835,7 +617,7 @@ const elementNodeData: NodesData = {
     name: 'Set Show',
     inputs: [
       {
-        name: 'target',
+        name: 'element',
         type: {
           type: 'string',
         },
@@ -853,7 +635,7 @@ const elementNodeData: NodesData = {
     name: 'Set Size',
     inputs: [
       {
-        name: 'target',
+        name: 'element',
         type: {
           type: 'string',
         },
@@ -877,7 +659,25 @@ const elementNodeData: NodesData = {
     name: 'Set Text',
     inputs: [
       {
-        name: 'target',
+        name: 'element',
+        type: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'text',
+        type: {
+          type: 'string',
+        },
+      },
+    ],
+    outputs: [],
+  },
+  'selenod.element.setTextValue': {
+    name: 'Set Text Value',
+    inputs: [
+      {
+        name: 'element',
         type: {
           type: 'string',
         },
@@ -895,7 +695,7 @@ const elementNodeData: NodesData = {
     name: 'Set Font Size',
     inputs: [
       {
-        name: 'target',
+        name: 'element',
         type: {
           type: 'string',
         },
@@ -913,7 +713,7 @@ const elementNodeData: NodesData = {
     name: 'Set Font Weight',
     inputs: [
       {
-        name: 'target',
+        name: 'element',
         type: {
           type: 'string',
         },
@@ -931,7 +731,7 @@ const elementNodeData: NodesData = {
     name: 'Set Color',
     inputs: [
       {
-        name: 'target',
+        name: 'element',
         type: {
           type: 'string',
         },
@@ -949,7 +749,7 @@ const elementNodeData: NodesData = {
     name: 'Set Background Color',
     inputs: [
       {
-        name: 'target',
+        name: 'element',
         type: {
           type: 'string',
         },
@@ -967,7 +767,7 @@ const elementNodeData: NodesData = {
     name: 'Set Border Radius',
     inputs: [
       {
-        name: 'target',
+        name: 'element',
         type: {
           type: 'string',
         },
@@ -985,7 +785,7 @@ const elementNodeData: NodesData = {
     name: 'Set Border Color',
     inputs: [
       {
-        name: 'target',
+        name: 'element',
         type: {
           type: 'string',
         },
@@ -1003,7 +803,7 @@ const elementNodeData: NodesData = {
     name: 'Set Checked',
     inputs: [
       {
-        name: 'target',
+        name: 'element',
         type: {
           type: 'string',
         },
@@ -1021,7 +821,7 @@ const elementNodeData: NodesData = {
     name: 'Set Asset',
     inputs: [
       {
-        name: 'target',
+        name: 'element',
         type: {
           type: 'string',
         },
@@ -1037,20 +837,331 @@ const elementNodeData: NodesData = {
   },
 };
 
+const assetNode: NodesData = {
+  'selenod.asset.getByName': {
+    name: 'Get Asset by Name',
+    inputs: [
+      {
+        name: 'name',
+        type: {
+          type: 'string',
+        },
+      },
+    ],
+    outputs: [
+      {
+        name: 'name',
+        type: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'id',
+        type: {
+          type: 'int',
+        },
+      },
+      {
+        name: 'contents',
+        type: {
+          type: 'string',
+        },
+      },
+    ],
+  },
+  'selenod.asset.getById': {
+    name: 'Get Asset by Id',
+    inputs: [
+      {
+        name: 'id',
+        type: {
+          type: 'int',
+        },
+      },
+    ],
+    outputs: [
+      {
+        name: 'name',
+        type: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'id',
+        type: {
+          type: 'int',
+        },
+      },
+      {
+        name: 'contents',
+        type: {
+          type: 'string',
+        },
+      },
+    ],
+  },
+};
+
+const fetchNode: NodesData = {
+  'selenod.fetch.get': {
+    name: 'Get',
+    inputs: [
+      {
+        name: 'url',
+        type: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'headers',
+        type: {
+          type: 'dict',
+          metadata: {
+            generics: ['T'],
+            genericValues: {
+              T: {
+                type: 'string',
+                metadata: {
+                  inputs: [],
+                  outputs: [],
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        name: 'then',
+        type: {
+          type: 'func',
+          metadata: {
+            inputs: [
+              {
+                name: 'response',
+                type: {
+                  type: 'dict',
+                },
+              },
+              {
+                name: 'data',
+                type: {
+                  type: 'any',
+                },
+              },
+            ],
+            outputs: [],
+          },
+        },
+      },
+      {
+        name: 'catch',
+        type: {
+          type: 'func',
+          metadata: {
+            inputs: [
+              {
+                name: 'response',
+                type: {
+                  type: 'dict',
+                },
+              },
+              {
+                name: 'error',
+                type: {
+                  type: 'any',
+                },
+              },
+            ],
+            outputs: [],
+          },
+        },
+      },
+    ],
+    outputs: [],
+  },
+  'selenod.fetch.post': {
+    name: 'Post',
+    inputs: [
+      {
+        name: 'url',
+        type: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'headers',
+        type: {
+          type: 'dict',
+          metadata: {
+            generics: ['T'],
+            genericValues: {
+              T: {
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+      {
+        name: 'body',
+        type: {
+          type: 'dict',
+          metadata: {
+            generics: ['T'],
+            genericValues: {
+              T: {
+                type: 'any',
+                metadata: {
+                  inputs: [],
+                  outputs: [],
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        name: 'then',
+        type: {
+          type: 'func',
+          metadata: {
+            inputs: [
+              {
+                name: 'response',
+                type: {
+                  type: 'dict',
+                },
+              },
+            ],
+            outputs: [],
+          },
+        },
+      },
+      {
+        name: 'catch',
+        type: {
+          type: 'func',
+          metadata: {
+            inputs: [
+              {
+                name: 'response',
+                type: {
+                  type: 'dict',
+                },
+              },
+              {
+                name: 'error',
+                type: {
+                  type: 'any',
+                },
+              },
+            ],
+            outputs: [],
+          },
+        },
+      },
+    ],
+    outputs: [],
+  },
+  'selenod.fetch.put': {
+    name: 'Put',
+    inputs: [
+      {
+        name: 'url',
+        type: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'headers',
+        type: {
+          type: 'dict',
+          metadata: {
+            generics: ['T'],
+            genericValues: {
+              T: {
+                type: 'func',
+                metadata: {
+                  inputs: [],
+                  outputs: [],
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        name: 'then',
+        type: {
+          type: 'func',
+        },
+      },
+      {
+        name: 'catch',
+        type: {
+          type: 'func',
+        },
+      },
+    ],
+    outputs: [],
+  },
+  'selenod.fetch.delete': {
+    name: 'Delete',
+    inputs: [
+      {
+        name: 'url',
+        type: {
+          type: 'string',
+        },
+      },
+      {
+        name: 'headers',
+        type: {
+          type: 'dict',
+          metadata: {
+            generics: ['T'],
+            genericValues: {
+              T: {
+                type: 'func',
+                metadata: {
+                  inputs: [],
+                  outputs: [],
+                },
+              },
+            },
+          },
+        },
+      },
+      {
+        name: 'then',
+        type: {
+          type: 'func',
+        },
+      },
+      {
+        name: 'catch',
+        type: {
+          type: 'func',
+        },
+      },
+    ],
+    outputs: [],
+  },
+};
+
 // Export Field
 export const nodeData: NodesData = {
   ...eventNodeData,
-  ...stringNodeData,
-  ...intNodeData,
-  ...floatNodeData,
-  ...boolNodeData,
-  ...IEUM_listNode,
-  ...IEUM_dictNode,
-  ...statementNodeData,
-  ...IEUM_variableNode,
-  ...IEUM_functionNode,
-  ...IEUM_logicNode,
   ...elementNodeData,
   ...debugNodeData,
+  ...fetchNode,
+  ...assetNode,
+  ...utilitiesNodeData,
+  ...IEUM_listNode,
+  ...IEUM_dictNode,
+  ...IEUM_logicNode,
+  ...IEUM_statementNode,
   ...IEUM_mathNode,
+  ...IEUM_functionNode,
+  ...IEUM_varNode,
 };

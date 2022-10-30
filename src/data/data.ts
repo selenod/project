@@ -6,6 +6,11 @@ import IEUM_functionNode from '@ieum-lang/ieum/dist/data/defaultNodes/functionNo
 import IEUM_statementNode from '@ieum-lang/ieum/dist/data/defaultNodes/statementNodes';
 import IEUM_logicNode from '@ieum-lang/ieum/dist/data/defaultNodes/logicNodes';
 import IEUM_varNode from '@ieum-lang/ieum/dist/data/defaultNodes/variableNodes';
+import IEUM_boolNode from '@ieum-lang/ieum/dist/data/defaultNodes/boolNodes';
+import IEUM_floatNode from '@ieum-lang/ieum/dist/data/defaultNodes/floatNodoes';
+import IEUM_intNode from '@ieum-lang/ieum/dist/data/defaultNodes/intNodoes';
+import IEUM_nullableNode from '@ieum-lang/ieum/dist/data/defaultNodes/nullableNodes';
+import IEUM_stringNode from '@ieum-lang/ieum/dist/data/defaultNodes/stringNodoes';
 
 // NodeData Field
 const eventNodeData: NodesData = {
@@ -193,7 +198,7 @@ const elementNodeData: NodesData = {
       },
     ],
   },
-  'selenod.element.getByName': {
+  'selenod.element.get:getByName': {
     name: 'Get Element by Name',
     inputs: [
       {
@@ -332,7 +337,7 @@ const elementNodeData: NodesData = {
       },
     ],
   },
-  'selenod.element.getById': {
+  'selenod.element.get:getById': {
     name: 'Get Element by Id',
     inputs: [
       {
@@ -487,32 +492,8 @@ const elementNodeData: NodesData = {
       },
     ],
   },
-  'selenod.element.deleteByName': {
-    name: 'Delete Element by Name',
-    inputs: [
-      {
-        name: 'name',
-        type: {
-          type: 'string',
-        },
-      },
-    ],
-    outputs: [],
-  },
-  'selenod.element.deleteById': {
-    name: 'Delete Element by Id',
-    inputs: [
-      {
-        name: 'id',
-        type: {
-          type: 'int',
-        },
-      },
-    ],
-    outputs: [],
-  },
-  'selenod.element.rename': {
-    name: 'Rename Element',
+  'selenod.element.set:name': {
+    name: 'Set Name',
     inputs: [
       {
         name: 'element',
@@ -529,7 +510,7 @@ const elementNodeData: NodesData = {
     ],
     outputs: [],
   },
-  'selenod.element.setPos': {
+  'selenod.element.set:pos': {
     name: 'Set Position',
     inputs: [
       {
@@ -553,7 +534,7 @@ const elementNodeData: NodesData = {
     ],
     outputs: [],
   },
-  'selenod.element.setAlign': {
+  'selenod.element.set:align': {
     name: 'Set Align',
     inputs: [
       {
@@ -577,7 +558,7 @@ const elementNodeData: NodesData = {
     ],
     outputs: [],
   },
-  'selenod.element.setRotation': {
+  'selenod.element.set:rotation': {
     name: 'Set Rotation',
     inputs: [
       {
@@ -595,7 +576,7 @@ const elementNodeData: NodesData = {
     ],
     outputs: [],
   },
-  'selenod.element.setIndex': {
+  'selenod.element.set:index': {
     name: 'Set Index Order',
     inputs: [
       {
@@ -613,7 +594,7 @@ const elementNodeData: NodesData = {
     ],
     outputs: [],
   },
-  'selenod.element.setShow': {
+  'selenod.element.set:show': {
     name: 'Set Show',
     inputs: [
       {
@@ -631,7 +612,7 @@ const elementNodeData: NodesData = {
     ],
     outputs: [],
   },
-  'selenod.element.setSize': {
+  'selenod.element.set:size': {
     name: 'Set Size',
     inputs: [
       {
@@ -655,7 +636,7 @@ const elementNodeData: NodesData = {
     ],
     outputs: [],
   },
-  'selenod.element.setText': {
+  'selenod.element.set:text': {
     name: 'Set Text',
     inputs: [
       {
@@ -673,7 +654,7 @@ const elementNodeData: NodesData = {
     ],
     outputs: [],
   },
-  'selenod.element.setTextValue': {
+  'selenod.element.set:textValue': {
     name: 'Set Text Value',
     inputs: [
       {
@@ -691,7 +672,7 @@ const elementNodeData: NodesData = {
     ],
     outputs: [],
   },
-  'selenod.element.setFontSize': {
+  'selenod.element.set:fontSize': {
     name: 'Set Font Size',
     inputs: [
       {
@@ -709,7 +690,7 @@ const elementNodeData: NodesData = {
     ],
     outputs: [],
   },
-  'selenod.element.setFontWeight': {
+  'selenod.element.set:fontWeight': {
     name: 'Set Font Weight',
     inputs: [
       {
@@ -727,7 +708,7 @@ const elementNodeData: NodesData = {
     ],
     outputs: [],
   },
-  'selenod.element.setColor': {
+  'selenod.element.set:color': {
     name: 'Set Color',
     inputs: [
       {
@@ -745,7 +726,7 @@ const elementNodeData: NodesData = {
     ],
     outputs: [],
   },
-  'selenod.element.setBackgroundColor': {
+  'selenod.element.set:backgroundColor': {
     name: 'Set Background Color',
     inputs: [
       {
@@ -763,7 +744,7 @@ const elementNodeData: NodesData = {
     ],
     outputs: [],
   },
-  'selenod.element.setBorderRadius': {
+  'selenod.element.set:borderRadius': {
     name: 'Set Border Radius',
     inputs: [
       {
@@ -781,7 +762,7 @@ const elementNodeData: NodesData = {
     ],
     outputs: [],
   },
-  'selenod.element.setBorderColor': {
+  'selenod.element.set:borderColor': {
     name: 'Set Border Color',
     inputs: [
       {
@@ -799,7 +780,7 @@ const elementNodeData: NodesData = {
     ],
     outputs: [],
   },
-  'selenod.element.setChecked': {
+  'selenod.element.set:checked': {
     name: 'Set Checked',
     inputs: [
       {
@@ -817,7 +798,7 @@ const elementNodeData: NodesData = {
     ],
     outputs: [],
   },
-  'selenod.element.setAsset': {
+  'selenod.element.set:asset': {
     name: 'Set Asset',
     inputs: [
       {
@@ -835,10 +816,34 @@ const elementNodeData: NodesData = {
     ],
     outputs: [],
   },
+  'selenod.element.del:deleteByName': {
+    name: 'Delete Element by Name',
+    inputs: [
+      {
+        name: 'name',
+        type: {
+          type: 'string',
+        },
+      },
+    ],
+    outputs: [],
+  },
+  'selenod.element.del:deleteById': {
+    name: 'Delete Element by Id',
+    inputs: [
+      {
+        name: 'id',
+        type: {
+          type: 'int',
+        },
+      },
+    ],
+    outputs: [],
+  },
 };
 
 const assetNode: NodesData = {
-  'selenod.asset.getByName': {
+  'selenod.asset.get:getByName': {
     name: 'Get Asset by Name',
     inputs: [
       {
@@ -869,7 +874,7 @@ const assetNode: NodesData = {
       },
     ],
   },
-  'selenod.asset.getById': {
+  'selenod.asset.get:getById': {
     name: 'Get Asset by Id',
     inputs: [
       {
@@ -1032,6 +1037,12 @@ const fetchNode: NodesData = {
                   type: 'dict',
                 },
               },
+              {
+                name: 'data',
+                type: {
+                  type: 'any',
+                },
+              },
             ],
             outputs: [],
           },
@@ -1080,7 +1091,21 @@ const fetchNode: NodesData = {
             generics: ['T'],
             genericValues: {
               T: {
-                type: 'func',
+                type: 'string',
+              },
+            },
+          },
+        },
+      },
+      {
+        name: 'body',
+        type: {
+          type: 'dict',
+          metadata: {
+            generics: ['T'],
+            genericValues: {
+              T: {
+                type: 'any',
                 metadata: {
                   inputs: [],
                   outputs: [],
@@ -1094,12 +1119,46 @@ const fetchNode: NodesData = {
         name: 'then',
         type: {
           type: 'func',
+          metadata: {
+            inputs: [
+              {
+                name: 'response',
+                type: {
+                  type: 'dict',
+                },
+              },
+              {
+                name: 'data',
+                type: {
+                  type: 'any',
+                },
+              },
+            ],
+            outputs: [],
+          },
         },
       },
       {
         name: 'catch',
         type: {
           type: 'func',
+          metadata: {
+            inputs: [
+              {
+                name: 'response',
+                type: {
+                  type: 'dict',
+                },
+              },
+              {
+                name: 'error',
+                type: {
+                  type: 'any',
+                },
+              },
+            ],
+            outputs: [],
+          },
         },
       },
     ],
@@ -1115,33 +1174,49 @@ const fetchNode: NodesData = {
         },
       },
       {
-        name: 'headers',
-        type: {
-          type: 'dict',
-          metadata: {
-            generics: ['T'],
-            genericValues: {
-              T: {
-                type: 'func',
-                metadata: {
-                  inputs: [],
-                  outputs: [],
-                },
-              },
-            },
-          },
-        },
-      },
-      {
         name: 'then',
         type: {
           type: 'func',
+          metadata: {
+            inputs: [
+              {
+                name: 'response',
+                type: {
+                  type: 'dict',
+                },
+              },
+              {
+                name: 'data',
+                type: {
+                  type: 'any',
+                },
+              },
+            ],
+            outputs: [],
+          },
         },
       },
       {
         name: 'catch',
         type: {
           type: 'func',
+          metadata: {
+            inputs: [
+              {
+                name: 'response',
+                type: {
+                  type: 'dict',
+                },
+              },
+              {
+                name: 'error',
+                type: {
+                  type: 'any',
+                },
+              },
+            ],
+            outputs: [],
+          },
         },
       },
     ],
@@ -1153,14 +1228,19 @@ const fetchNode: NodesData = {
 export const nodeData: NodesData = {
   ...eventNodeData,
   ...elementNodeData,
+  ...assetNode,
   ...debugNodeData,
   ...fetchNode,
-  ...assetNode,
   ...utilitiesNodeData,
+  ...IEUM_stringNode,
+  ...IEUM_intNode,
+  ...IEUM_floatNode,
+  ...IEUM_boolNode,
+  ...IEUM_nullableNode,
   ...IEUM_listNode,
   ...IEUM_dictNode,
-  ...IEUM_logicNode,
   ...IEUM_statementNode,
+  ...IEUM_logicNode,
   ...IEUM_mathNode,
   ...IEUM_functionNode,
   ...IEUM_varNode,

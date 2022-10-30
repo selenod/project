@@ -11,7 +11,11 @@ import IEUM_dictAction from '@ieum-lang/ieum-runtime/dist/data/defaultNodesActio
 import IEUM_stateAction from '@ieum-lang/ieum-runtime/dist/data/defaultNodesAction/statementNodesAction';
 import IEUM_mathAction from '@ieum-lang/ieum-runtime/dist/data/defaultNodesAction/mathNodesAction';
 import IEUM_logicAction from '@ieum-lang/ieum-runtime/dist/data/defaultNodesAction/logicNodesAction';
-import IEUM_varAction from '@ieum-lang/ieum-runtime/dist/data/defaultNodesAction/variableNodesAction';
+import IEUM_boolAction from '@ieum-lang/ieum-runtime/dist/data/defaultNodesAction/boolNodesAction';
+import IEUM_floatAction from '@ieum-lang/ieum-runtime/dist/data/defaultNodesAction/floatNodesAction';
+import IEUM_intAction from '@ieum-lang/ieum-runtime/dist/data/defaultNodesAction/intNodesAction';
+import IEUM_nullableAction from '@ieum-lang/ieum-runtime/dist/data/defaultNodesAction/nullableNodesAction';
+import IEUM_stringAction from '@ieum-lang/ieum-runtime/dist/data/defaultNodesAction/stringNodesAction';
 
 enum Part {
   HORIZONTAL = 'Horizontal',
@@ -307,7 +311,7 @@ export default function App() {
         },
       });
       setElement({
-        'selenod.element.getByName': (input: { name: any }) => {
+        'selenod.element.get:getByName': (input: { name: any }) => {
           return {
             name: subData?.windowList
               .find((window: any) => window.id === currentWindow)!
@@ -392,7 +396,7 @@ export default function App() {
               .elementData.find((element) => element.name === input.name)?.src,
           };
         },
-        'selenod.element.getById': (input: { id: any }) => {
+        'selenod.element.get:getById': (input: { id: any }) => {
           return {
             name: subData?.windowList
               .find((window: any) => window.id === currentWindow)!
@@ -549,7 +553,7 @@ export default function App() {
                   ].id,
           };
         },
-        'selenod.element.deleteByName': (input: { name: string }) => {
+        'selenod.element.del:deleteByName': (input: { name: string }) => {
           modifyData({
             ...subData,
             windowList: [
@@ -573,7 +577,7 @@ export default function App() {
 
           return {};
         },
-        'selenod.element.deleteById': (input: { id: number }) => {
+        'selenod.element.del:deleteById': (input: { id: number }) => {
           modifyData({
             ...subData,
             windowList: [
@@ -595,7 +599,7 @@ export default function App() {
 
           return {};
         },
-        'selenod.element.rename': (input: { element: any; name: any }) => {
+        'selenod.element.set:name': (input: { element: any; name: any }) => {
           modifyData({
             ...subData,
             windowList: [
@@ -630,7 +634,11 @@ export default function App() {
 
           return {};
         },
-        'selenod.element.setPos': (input: { element: any; x: any; y: any }) => {
+        'selenod.element.set:pos': (input: {
+          element: any;
+          x: any;
+          y: any;
+        }) => {
           modifyData({
             ...subData,
             windowList: [
@@ -666,7 +674,7 @@ export default function App() {
 
           return {};
         },
-        'selenod.element.setAlign': (input: {
+        'selenod.element.set:align': (input: {
           element: any;
           'x Align': any;
           'y Align': any;
@@ -706,7 +714,7 @@ export default function App() {
 
           return {};
         },
-        'selenod.element.setRotation': (input: {
+        'selenod.element.set:rotation': (input: {
           element: any;
           rotation: any;
         }) => {
@@ -744,7 +752,7 @@ export default function App() {
 
           return {};
         },
-        'selenod.element.setIndex': (input: { element: any; order: any }) => {
+        'selenod.element.set:index': (input: { element: any; order: any }) => {
           modifyData({
             ...subData,
             windowList: [
@@ -779,7 +787,7 @@ export default function App() {
 
           return {};
         },
-        'selenod.element.setShow': (input: {
+        'selenod.element.set:show': (input: {
           element: any;
           'is Shown': any;
         }) => {
@@ -817,7 +825,7 @@ export default function App() {
 
           return {};
         },
-        'selenod.element.setSize': (input: {
+        'selenod.element.set:size': (input: {
           element: any;
           width: any;
           height: any;
@@ -857,7 +865,7 @@ export default function App() {
 
           return {};
         },
-        'selenod.element.setText': (input: { element: any; text: any }) => {
+        'selenod.element.set:text': (input: { element: any; text: any }) => {
           modifyData({
             ...subData,
             windowList: [
@@ -892,7 +900,7 @@ export default function App() {
 
           return {};
         },
-        'selenod.element.setTextValue': (
+        'selenod.element.set:textValue': (
           input: {
             element: any;
             text: any;
@@ -927,7 +935,10 @@ export default function App() {
 
           return {};
         },
-        'selenod.element.setFontSize': (input: { element: any; size: any }) => {
+        'selenod.element.set:fontSize': (input: {
+          element: any;
+          size: any;
+        }) => {
           modifyData({
             ...subData,
             windowList: [
@@ -962,7 +973,7 @@ export default function App() {
 
           return {};
         },
-        'selenod.element.setFontWeight': (input: {
+        'selenod.element.set:fontWeight': (input: {
           element: any;
           weight: any;
         }) => {
@@ -1000,7 +1011,7 @@ export default function App() {
 
           return {};
         },
-        'selenod.element.setColor': (input: { element: any; color: any }) => {
+        'selenod.element.set:color': (input: { element: any; color: any }) => {
           modifyData({
             ...subData,
             windowList: [
@@ -1035,7 +1046,7 @@ export default function App() {
 
           return {};
         },
-        'selenod.element.setBackgroundColor': (input: {
+        'selenod.element.set:backgroundColor': (input: {
           element: any;
           color: any;
         }) => {
@@ -1073,7 +1084,7 @@ export default function App() {
 
           return {};
         },
-        'selenod.element.setBorderRadius': (input: {
+        'selenod.element.set:borderRadius': (input: {
           element: any;
           radius: any;
         }) => {
@@ -1111,7 +1122,7 @@ export default function App() {
 
           return {};
         },
-        'selenod.element.setBorderColor': (input: {
+        'selenod.element.set:borderColor': (input: {
           element: any;
           color: any;
         }) => {
@@ -1149,7 +1160,7 @@ export default function App() {
 
           return {};
         },
-        'selenod.element.setChecked': (input: {
+        'selenod.element.set:checked': (input: {
           element: any;
           'is Checked': any;
         }) => {
@@ -1188,7 +1199,7 @@ export default function App() {
 
           return {};
         },
-        'selenod.element.setAsset': (input: {
+        'selenod.element.set:asset': (input: {
           element: any;
           'asset Id': any;
         }) => {
@@ -1228,7 +1239,7 @@ export default function App() {
         },
       });
       setAsset({
-        'selenod.asset.getByName': (input: { name: string }) => {
+        'selenod.asset.get:getByName': (input: { name: string }) => {
           const asset = data?.assetData.find(
             (asset) => asset.name + asset.extension === input.name
           );
@@ -1244,7 +1255,7 @@ export default function App() {
             contents: asset?.contents,
           };
         },
-        'selenod.asset.getById': (input: { id: number }) => {
+        'selenod.asset.get:getById': (input: { id: number }) => {
           const asset = data?.assetData.find((asset) => asset.id === input.id);
 
           return {
@@ -1263,7 +1274,9 @@ export default function App() {
         'selenod.fetch.get': (
           input: {
             url: string;
-            headers: object;
+            headers: Array<{
+              [key: string]: any;
+            }>;
             then: string;
             catch: string;
           },
@@ -1272,9 +1285,16 @@ export default function App() {
           let res: object;
 
           fetch(input.url, {
-            headers: {
-              ...input.headers,
-            },
+            headers:
+              Object.keys(input.headers).length === 0
+                ? undefined
+                : input.headers.reduce(
+                    (pv, cv) => ({
+                      ...pv,
+                      ...cv,
+                    }),
+                    {}
+                  ),
           })
             .then((response) => {
               res = response;
@@ -1282,16 +1302,20 @@ export default function App() {
               return response.json();
             })
             .then((data) => {
-              runtime.executeFunc(input.then, {
-                response: res,
-                data,
-              });
+              if (input.then !== undefined) {
+                runtime.executeFunc(input.then, {
+                  response: res,
+                  data,
+                });
+              }
             })
             .catch((error) => {
-              runtime.executeFunc(input.catch, {
-                response: res,
-                error,
-              });
+              if (input.catch !== undefined) {
+                runtime.executeFunc(input.catch, {
+                  response: res,
+                  error,
+                });
+              }
             });
 
           return {};
@@ -1299,8 +1323,12 @@ export default function App() {
         'selenod.fetch.post': (
           input: {
             url: string;
-            headers: object;
-            body: object;
+            headers: Array<{
+              [key: string]: any;
+            }>;
+            body: Array<{
+              [key: string]: any;
+            }>;
             then: string;
             catch: string;
           },
@@ -1310,26 +1338,153 @@ export default function App() {
 
           fetch(input.url, {
             method: 'POST',
-            headers: {
-              ...input.headers,
-            },
-            body: JSON.stringify(input.body),
+            headers:
+              Object.keys(input.headers).length === 0
+                ? undefined
+                : input.headers.reduce(
+                    (pv, cv) => ({
+                      ...pv,
+                      ...cv,
+                    }),
+                    {}
+                  ),
+
+            body:
+              Object.keys(input.body).length === 0
+                ? undefined
+                : JSON.stringify(
+                    input.body.reduce(
+                      (pv, cv) => ({
+                        ...pv,
+                        ...cv,
+                      }),
+                      {}
+                    )
+                  ),
           })
             .then((response) => {
               res = response;
 
               return response.json();
             })
-            .then(() => {
-              runtime.executeFunc(input.then, {
-                response: res,
-              });
+            .then((data) => {
+              if (input.then !== undefined) {
+                runtime.executeFunc(input.then, {
+                  response: res,
+                  data,
+                });
+              }
             })
             .catch((error) => {
-              runtime.executeFunc(input.catch, {
-                response: res,
-                error,
-              });
+              if (input.catch !== undefined) {
+                runtime.executeFunc(input.catch, {
+                  response: res,
+                  error,
+                });
+              }
+            });
+
+          return {};
+        },
+        'selenod.fetch.put': (
+          input: {
+            url: string;
+            headers: Array<{
+              [key: string]: any;
+            }>;
+            body: Array<{
+              [key: string]: any;
+            }>;
+            then: string;
+            catch: string;
+          },
+          runtime
+        ) => {
+          let res: object;
+
+          fetch(input.url, {
+            method: 'PUT',
+            headers:
+              Object.keys(input.headers).length === 0
+                ? undefined
+                : input.headers.reduce(
+                    (pv, cv) => ({
+                      ...pv,
+                      ...cv,
+                    }),
+                    {}
+                  ),
+
+            body:
+              Object.keys(input.body).length === 0
+                ? undefined
+                : JSON.stringify(
+                    input.body.reduce(
+                      (pv, cv) => ({
+                        ...pv,
+                        ...cv,
+                      }),
+                      {}
+                    )
+                  ),
+          })
+            .then((response) => {
+              res = response;
+
+              return response.json();
+            })
+            .then((data) => {
+              if (input.then !== undefined) {
+                runtime.executeFunc(input.then, {
+                  response: res,
+                  data,
+                });
+              }
+            })
+            .catch((error) => {
+              if (input.catch !== undefined) {
+                runtime.executeFunc(input.catch, {
+                  response: res,
+                  error,
+                });
+              }
+            });
+
+          return {};
+        },
+        'selenod.fetch.delete': (
+          input: {
+            url: string;
+            then: string;
+            catch: string;
+          },
+          runtime
+        ) => {
+          let res: object;
+
+          fetch(input.url, {
+            method: 'DELETE',
+          })
+            .then((response) => {
+              res = response;
+
+              return response.json();
+            })
+            .then((data) => {
+              if (input.then !== undefined) {
+                runtime.executeFunc(input.then, {
+                  response: res,
+                  data,
+                });
+              }
+            })
+            .catch((error) => {
+              if (input.catch !== undefined) {
+                runtime.executeFunc(input.catch, {
+                  response: res,
+                  error,
+                });
+              }
             });
 
           return {};
@@ -1370,7 +1525,11 @@ export default function App() {
             ...debugNodeAction,
             ...IEUM_mathAction,
             ...IEUM_logicAction,
-            ...IEUM_varAction,
+            ...IEUM_boolAction,
+            ...IEUM_intAction,
+            ...IEUM_floatAction,
+            ...IEUM_nullableAction,
+            ...IEUM_stringAction,
           },
           data?.windowList.find(
             (window: any) => window.id === currentWindow
